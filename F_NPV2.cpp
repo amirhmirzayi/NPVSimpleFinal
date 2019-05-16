@@ -409,6 +409,7 @@ void f_npv2(void)
 	}
 
 	lv_nr16 = static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[1][0]) / static_cast<double>(ga_bin_min[16])));
+
 	gv_npv = lm_npv_str[1][0][lv_nr16][(gm_ptg_nrc[1][0] - 1 - (lv_nr16 * ga_bin_min[16]))];
 	//	gv_npv=lm_npv_str[1][0][0][(gm_ptg_nrc[1][0]-1)];	// Set outcome NPV.
 	printf("]");
@@ -463,10 +464,10 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	//////////////////////////////////////////////////////////////////////////
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
-	bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);
 	double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Given a decision, computes the npv
 	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij,  unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
-
+	bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);
+	
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZATION/////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -1010,7 +1011,7 @@ bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned shor
 	add += f_fnd(i, j, lv_tmp_ter,gm_ptg_nrc_ij, lm_ter_str, lm_npv_str);
 	mtx.lock();
 	if (*max < add)
-		add = *max;
+	 *max=add;
 	mtx.unlock();
 	return true;
 }
