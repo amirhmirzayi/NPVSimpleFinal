@@ -463,9 +463,9 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	//////////////////////////////////////////////////////////////////////////
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
-	bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str);
+	bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);
 	double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Given a decision, computes the npv
-	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
+	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij,  unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZATION/////////////////////////////////////////////////
@@ -481,21 +481,15 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	///////////DO NOT START ADDITIONAL ACTIVITIES/////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	z1 = 0;
+
 	for (k = 0; k < gv_bnr; k++)
 	{
 		if (la_bin_bus[k] > 0)
 		{
-			z1 = 1;	// Indicate that some activities are busy; as such we are not obliged to start activities.
-		}
-	}
-	if (z1 == 1)	// Start combination without starting additional activities.
-	{
-		//--> WRITE AWAY DECISION.
-		lv_tmp_npv = f_npv(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str);
-		if (lv_max_npv < lv_tmp_npv)
-		{
-			lv_max_npv = lv_tmp_npv;	// Maximize npv.
+			lv_tmp_npv = f_npv(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str);
+			if (lv_max_npv < lv_tmp_npv)
+				lv_max_npv = lv_tmp_npv;	// Maximize npv.
+			break;
 		}
 	}
 
@@ -508,7 +502,8 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	{
 		if (la_bin_idl[k] > 0)
 		{
-			z1 = 1;	// Indicate that some activities are idle; as such they can be started.
+			z1 = 1;
+			break;
 		}
 	}
 	if (z1 == 1)	// Start additional activities.
@@ -571,15 +566,18 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 		la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]++;
 		lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 		//--> WRITE AWAY DECISION.
-		if(multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+
+
+
+		if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, gm_ptg_nrc[i][j],  lm_ter_str, lm_npv_str));
 		else {
-			lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+			lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter,gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
 			if (lv_max_npv < lv_tmp_npv)
 			{
 				lv_max_npv = lv_tmp_npv;	// Maximize npv.
 			}
 		}
-			
+
 		//////////////////////////////////////////////////////////////////////
 		///////SHRINK EXPAND PROCEDURE////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////
@@ -602,14 +600,17 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 					la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]++;
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 					//--> WRITE AWAY DECISION.
-					if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+
+
+					if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
 					else {
-						lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+						lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j],  lm_ter_str, lm_npv_str));
 						if (lv_max_npv < lv_tmp_npv)
 						{
 							lv_max_npv = lv_tmp_npv;	// Maximize npv.
 						}
 					}
+
 
 				} while (la_sub_pos[m] < (la_idl_act[0] - 1));	// Do until the value at the position reaches its maximum.
 
@@ -645,10 +646,11 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 					//					if(la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m]+1)]]]==2){printf("Error++act_sta1");throw"Error";}
 					la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]++;
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
+
 					//--> WRITE AWAY DECISION.
-					if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+					if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
 					else {
-						lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+						lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j],  lm_ter_str, lm_npv_str));
 						if (lv_max_npv < lv_tmp_npv)
 						{
 							lv_max_npv = lv_tmp_npv;	// Maximize npv.
@@ -657,15 +659,15 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 				} while ((m > 0) && (la_sub_pos[m] == (la_idl_act[0] - 1)));	// Do as long as: a) the first activity has not yet been reached, b) the activity is still at its maximum.
 
-				if (m == 0)
+				if (m == 0 && la_sub_pos[m] == (la_idl_act[0] - 1))
 				{
-					if (la_sub_pos[m] == (la_idl_act[0] - 1))
-					{
-						z1 = 1;	// All decisions have been found.
-					}
+
+					z1 = 1;	// All decisions have been found.
+					break;
 				}
 			} while (z1 == 0);	// Do until all decisions have been found. If all decisions have been found, only the last idle activity is set busy, correct this and exit this function. If only 1 idle action was present, this action is also the last action...
 		}
+
 		lv_nr32 = static_cast<int>(floor(static_cast<double>(la_idl_act[(la_sub_pos[m] + 1)]) / static_cast<double>(32)));
 		z2 = ga_bin[static_cast<int>(la_idl_act[(la_sub_pos[m] + 1)] - (lv_nr32 * 32))];
 		la_bin_bus[lv_nr32] -= z2;
@@ -690,7 +692,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 		for (it = list_parallel_f_fnd.begin(); it != list_parallel_f_fnd.end(); ++it)
 			it->get();
 	}
-	
+
 	return lv_max_npv;
 }
 
@@ -727,7 +729,7 @@ double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
+	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZATION/////////////////////////////////////////////////
@@ -869,7 +871,7 @@ double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_
 					}
 				}
 			}
-			lv_tmp_npv += (lv_prob * lv_factor * f_fnd(gm_dpt_ptg[i][j][lv_lnk], gm_lnk_ptg[i][j][lv_lnk], lv_tmp_ter, lm_ter_str, lm_npv_str));	// Find the npv value corresponding to this tertiary value.
+			lv_tmp_npv += (lv_prob * lv_factor * f_fnd(gm_dpt_ptg[i][j][lv_lnk], gm_lnk_ptg[i][j][lv_lnk], lv_tmp_ter, gm_ptg_nrc[gm_dpt_ptg[i][j][lv_lnk]][gm_lnk_ptg[i][j][lv_lnk]], lm_ter_str, lm_npv_str));	// Find the npv value corresponding to this tertiary value.
 		}
 		else	// No link has been established.
 		{
@@ -885,7 +887,7 @@ double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[n]);
 				}
 			}
-			lv_tmp_npv += (lv_prob * lv_factor * f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));	// Find the npv value corresponding to this tertiary value.
+			lv_tmp_npv += (lv_prob * lv_factor * f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));	// Find the npv value corresponding to this tertiary value.
 		}
 
 		//		if(la_act_sta[la_ptg_act_inv[la_bus_act[m+1]]]==0){printf("Error15");throw"Error";}
@@ -907,7 +909,7 @@ double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_
 	return lv_tmp_npv;
 }
 
-double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str)	// Find the npv value corresponding to the tertiary value. i and j indicate the recursion depth and ptg identification.
+double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter,unsigned long gm_ptg_nrc_ij,  unsigned long int**** lm_ter_str, float**** lm_npv_str)	// Find the npv value corresponding to the tertiary value. i and j indicate the recursion depth and ptg identification.
 {
 	//////////////////////////////////////////////////////////////////////////
 	///////////DEFINE LOCAL VARIABLES/////////////////////////////////////////
@@ -925,7 +927,9 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 	//////////////////////////////////////////////////////////////////////////
 
 	// First check in which lv_nr16_cut block the combination falls.
-	lv_nr16_cut = static_cast<unsigned short int>(floor(static_cast<double>(gm_ptg_nrc[i][j]) / static_cast<double>(ga_bin_min[16])));
+	double ga_bin_min_16 = ga_bin_min[16];
+	double floar_lv_nr16_cut = floor(static_cast<double>(gm_ptg_nrc_ij) / static_cast<double>(ga_bin_min_16));
+	lv_nr16_cut = static_cast<unsigned short int>(floar_lv_nr16_cut);
 	while (lm_ter_str[i][j][lv_nr16_cut][0] < lv_tmp_ter)	// Increase lv_nr16_cut until you arrive at the correct block of the tertiary structure (position 0 holds the highest value).
 	{
 		lv_nr16_cut--;
@@ -933,28 +937,28 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 	//	if(lv_nr16_cut>=ga_bin_min[16]){printf("lv_nr16_cut too big");throw"Error";}
 
 		// Determine the number of elements in this block of the tertiary structure.
-	if (lv_nr16_cut < static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[i][j]) / static_cast<double>(ga_bin_min[16]))))	// lv_nr16_cut has decreased.
+	if (lv_nr16_cut < static_cast<int>(floar_lv_nr16_cut))	// lv_nr16_cut has decreased.
 	{
-		lv_cut = ga_bin_min[16] - 1;
+		lv_cut = ga_bin_min_16 - 1;
 	}
 	else
 	{
-		lv_nr16_cut = static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[i][j]) / static_cast<double>(ga_bin_min[16])));
+		lv_nr16_cut = static_cast<int>(floar_lv_nr16_cut);
 		//		if(lv_nr16_cut>=ga_bin_min[16]){printf("lv_nr16_cut too big");throw"Error";}
-		if ((floor(static_cast<double>(gm_ptg_nrc[i][j]) / static_cast<double>(ga_bin_min[16]))) == (static_cast<double>(gm_ptg_nrc[i][j]) / static_cast<double>(ga_bin_min[16])))	// The remainder equals the full 16 bits.
+		if (floar_lv_nr16_cut == (static_cast<double>(gm_ptg_nrc_ij) / static_cast<double>(ga_bin_min_16)))	// The remainder equals the full 16 bits.
 		{
 			if (lv_nr16_cut == 0)
 			{
 				throw "Error: zero combinations present at this ptg.";
 			}
-			lv_cut = ga_bin_min[16] - 1;
+			lv_cut = ga_bin_min_16 - 1;
 		}
 		else	// The remainder equals some bits.
 		{
-			lv_cut = gm_ptg_nrc[i][j] - (lv_nr16_cut * ga_bin_min[16]) - 1;
+			lv_cut = gm_ptg_nrc_ij - (lv_nr16_cut * ga_bin_min_16) - 1;
 		}
 		// Reset the value of lv_nr16_cut.
-		lv_nr16_cut = static_cast<unsigned short int>(floor(static_cast<double>(gm_ptg_nrc[i][j]) / static_cast<double>(ga_bin_min[16])));
+		lv_nr16_cut = static_cast<unsigned short int>(floar_lv_nr16_cut);
 		while (lm_ter_str[i][j][lv_nr16_cut][0] < lv_tmp_ter)	// Increase lv_nr16_cut until you arrive at the correct block of the tertiary structure (position 0 holds the highest value).
 		{
 			lv_nr16_cut--;
@@ -970,8 +974,8 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 	lv_cut_lower = 0;
 	while (lv_cut > 1)
 	{
-	
-		z2 = static_cast<unsigned long int>(lv_cut_lower + (lv_cut % 2 + lv_cut / 2));//ceil(static_cast<double>(lv_cut) / static_cast<double>(2))
+
+		z2 = static_cast<unsigned long int>(lv_cut_lower + (lv_cut % 2 + lv_cut / 2));//z2=static_cast<unsigned long int>(lv_cut_lower+ceil(static_cast<double>(lv_cut)/static_cast<double>(2)));
 		if (lv_tmp_ter >= lm_ter_str[i][j][lv_nr16_cut][z2])	// The tertiary value is larger, so it belongs to the first half.
 		{
 			lv_cut_upper = z2;
@@ -1002,13 +1006,13 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 	return lm_npv_str[i][j][lv_nr16_cut][lv_cut_upper];	// Return the corresponding NPV value.
 }
 std::mutex mtx;
-bool parallel_f_fnd(double *max, double add,unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str) {
-		add+=f_fnd(i,j,lv_tmp_ter,lm_ter_str,lm_npv_str);
-		mtx.lock();
-		if (*max < add)
-			add = *max;
-		mtx.unlock();
-		return true;
+bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij,unsigned long int**** lm_ter_str, float**** lm_npv_str) {
+	add += f_fnd(i, j, lv_tmp_ter,gm_ptg_nrc_ij, lm_ter_str, lm_npv_str);
+	mtx.lock();
+	if (*max < add)
+		add = *max;
+	mtx.unlock();
+	return true;
 }
 void f_ter2(unsigned short int i, unsigned short int j, unsigned long int**** lm_ter_str, float**** lm_npv_str)		// Construct tertiary structure.
 {
