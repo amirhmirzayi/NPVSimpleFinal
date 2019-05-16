@@ -279,12 +279,9 @@ void f_udc(void)
 				{
 					for(k2=(l2+1);k2<gm_nio_ptg[i2][j2][0];k2++)
 					{
-						if(gm_lnk_ptg[i2][j2][l2]==gm_lnk_ptg[i2][j2][k2])
+						if(gm_lnk_ptg[i2][j2][l2]==gm_lnk_ptg[i2][j2][k2]&& gm_dpt_ptg[i2][j2][l2] == gm_dpt_ptg[i2][j2][k2])
 						{
-							if(gm_dpt_ptg[i2][j2][l2]==gm_dpt_ptg[i2][j2][k2])
-							{
-								m2++;
-							}
+							m2++;
 						}
 					}
 				}

@@ -436,11 +436,7 @@ void f_npv2(void)
 	delete la_ptg_act;
 	delete la_ptg_act_inv;
 }
-double parallel_f_fnd(double add,unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str) {
-	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
 
-	return	add+f_fnd(i,j,lv_tmp_ter,lm_ter_str,lm_npv_str);
-}
 double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_idl, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str)	// Create all decisions given a set of idle activities.
 {
 	//////////////////////////////////////////////////////////////////////////
@@ -460,14 +456,14 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	unsigned short int	k;	// Simple counter.
 	unsigned short int	l;	// Simple counter.
 	unsigned short int	m;	// Simple counter.
-	list<future<double>> list_parallel_f_fnd;
+	list<future<bool>> list_parallel_f_fnd;
 	unsigned long int	z2;
 	bool				z1;
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
-
+	bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str);
 	double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Given a decision, computes the npv
 	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
 
@@ -575,12 +571,15 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 		la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]++;
 		lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 		//--> WRITE AWAY DECISION.
-		//lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
-		//if (lv_max_npv < lv_tmp_npv)
-		//{
-		//	lv_max_npv = lv_tmp_npv;	// Maximize npv.
-		//}
-		list_parallel_f_fnd.push_back(async(parallel_f_fnd, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+		if(multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+		else {
+			lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+			if (lv_max_npv < lv_tmp_npv)
+			{
+				lv_max_npv = lv_tmp_npv;	// Maximize npv.
+			}
+		}
+			
 		//////////////////////////////////////////////////////////////////////
 		///////SHRINK EXPAND PROCEDURE////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////
@@ -603,13 +602,14 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 					la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]++;
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 					//--> WRITE AWAY DECISION.
-				//	lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
-				//	if (lv_max_npv < lv_tmp_npv)
-				//	{
-				//		lv_max_npv = lv_tmp_npv;	// Maximize npv.
-				//	}
-					list_parallel_f_fnd.push_back(async(parallel_f_fnd, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
-
+					if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+					else {
+						lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+						if (lv_max_npv < lv_tmp_npv)
+						{
+							lv_max_npv = lv_tmp_npv;	// Maximize npv.
+						}
+					}
 
 				} while (la_sub_pos[m] < (la_idl_act[0] - 1));	// Do until the value at the position reaches its maximum.
 
@@ -646,12 +646,15 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 					la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]++;
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 					//--> WRITE AWAY DECISION.
-					//lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
-					//if (lv_max_npv < lv_tmp_npv)
-					//{
-					//	lv_max_npv = lv_tmp_npv;	// Maximize npv.
-					//}
-					list_parallel_f_fnd.push_back(async(parallel_f_fnd, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+					if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+					else {
+						lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, lm_ter_str, lm_npv_str));
+						if (lv_max_npv < lv_tmp_npv)
+						{
+							lv_max_npv = lv_tmp_npv;	// Maximize npv.
+						}
+					}
+
 				} while ((m > 0) && (la_sub_pos[m] == (la_idl_act[0] - 1)));	// Do as long as: a) the first activity has not yet been reached, b) the activity is still at its maximum.
 
 				if (m == 0)
@@ -681,14 +684,11 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	//////////////////////////////////////////////////////////////////////////
 	///////////RETURN NPV CORRESPONDING TO THE OPTIMAL DECISION///////////////
 	//////////////////////////////////////////////////////////////////////////
-	list<future<double>> ::iterator it;
-	for (it = list_parallel_f_fnd.begin(); it != list_parallel_f_fnd.end(); ++it)
+	if (multithread)
 	{
-		lv_tmp_npv = it->get();
-		if (lv_max_npv < lv_tmp_npv)
-		{
-			lv_max_npv = lv_tmp_npv;	// Maximize npv.
-		}
+		list<future<bool>> ::iterator it;
+		for (it = list_parallel_f_fnd.begin(); it != list_parallel_f_fnd.end(); ++it)
+			it->get();
 	}
 	
 	return lv_max_npv;
@@ -1001,7 +1001,15 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 
 	return lm_npv_str[i][j][lv_nr16_cut][lv_cut_upper];	// Return the corresponding NPV value.
 }
-
+std::mutex mtx;
+bool parallel_f_fnd(double *max, double add,unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long int**** lm_ter_str, float**** lm_npv_str) {
+		add+=f_fnd(i,j,lv_tmp_ter,lm_ter_str,lm_npv_str);
+		mtx.lock();
+		if (*max < add)
+			add = *max;
+		mtx.unlock();
+		return true;
+}
 void f_ter2(unsigned short int i, unsigned short int j, unsigned long int**** lm_ter_str, float**** lm_npv_str)		// Construct tertiary structure.
 {
 	//////////////////////////////////////////////////////////////////////////
