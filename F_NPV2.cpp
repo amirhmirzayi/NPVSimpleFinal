@@ -36,7 +36,6 @@ void f_npv2(void)
 	unsigned long int	z2;
 	unsigned short int	z1;
 	bool				z0;
-	list<future<bool>> list_parallel_f_dec;
 	//////////////////////////////////////////////////////////////////////////
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -247,11 +246,11 @@ void f_npv2(void)
 
 			do
 			{
+				
 				if (la_act_sta[m] == 2)	// Unfinishing the last activity will impact la_lnk_fin.
 				{
 					//--> ENTER NEW FUNCTION TO COMPUTE DECISIONS. (last activity status 2).
-					if (multithread2)list_parallel_f_dec.push_back(async(parallel_f_dec, &lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))], i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
-					else lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))] = static_cast<float>(f_dec(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
+				 lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))] = static_cast<float>(f_dec(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
 					for (l = 0; l < gm_nio_ptg[i][j][0]; l++)	// Record the impact of finishing activity la_ptg_act[m+1].
 					{
 						if (lm_lnk_mem[l][m] == 1)
@@ -264,12 +263,12 @@ void f_npv2(void)
 					lv_nr16 = static_cast<int>(floor(static_cast<double>(lv_tot_nrc) / static_cast<double>(ga_bin_min[16])));
 					lv_nr32 = static_cast<int>(floor(static_cast<double>(la_ptg_act[(m + 1)]) / static_cast<double>(32)));
 					z2 = ga_bin[static_cast<int>(la_ptg_act[(m + 1)] - (lv_nr32 * 32))];
+				
 					la_bin_fin[lv_nr32] -= z2;
 					la_bin_bus[lv_nr32] += z2;
 				}
 				//--> ENTER NEW FUNCTION TO COMPUTE DECISIONS. (last activity status 1).
-				if (multithread2)list_parallel_f_dec.push_back(async(parallel_f_dec, &lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))], i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
-				else lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))] = static_cast<float>(                                       f_dec(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
+		 lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))] = static_cast<float>(                                       f_dec(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
 				la_act_sta[m]--;
 				lv_tot_nrc++;	// Increase the number of combinations at this ptg.
 				lv_nr16 = static_cast<int>(floor(static_cast<double>(lv_tot_nrc) / static_cast<double>(ga_bin_min[16])));
@@ -277,9 +276,9 @@ void f_npv2(void)
 				z2 = ga_bin[static_cast<int>(la_ptg_act[(m + 1)] - (lv_nr32 * 32))];
 				la_bin_bus[lv_nr32] -= z2;
 				la_bin_idl[lv_nr32] += z2;
+			
 				//--> ENTER NEW FUNCTION TO COMPUTE DECISIONS. (last activity status 0).
-				if (multithread2)list_parallel_f_dec.push_back(async(parallel_f_dec, &lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))], i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
-				else lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))] = static_cast<float>(f_dec(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
+			 lm_npv_str[i][j][lv_nr16][(lv_tot_nrc - (lv_nr16 * ga_bin_min[16]))] = static_cast<float>(f_dec(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
 				lv_tot_nrc++;	// Increase the number of combinations at this ptg.
 				lv_nr16 = static_cast<int>(floor(static_cast<double>(lv_tot_nrc) / static_cast<double>(ga_bin_min[16])));
 
@@ -350,7 +349,6 @@ void f_npv2(void)
 								}
 							}
 						}
-
 					} 	// Do until you arrive at the last activity.
 				}
 			} while (z0 == 0);	// Repeat reverse shrink-expand procedure until all combinations have been found.
@@ -483,7 +481,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	///////////DO NOT START ADDITIONAL ACTIVITIES/////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-
+//#pragma omp parallel for
 	for (k = 0; k < gv_bnr; k++)
 	{
 		if (la_bin_bus[k] > 0)
@@ -571,14 +569,13 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 
 
-		if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
-		else {
+		
 			lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
 			if (lv_max_npv < lv_tmp_npv)
 			{
 				lv_max_npv = lv_tmp_npv;	// Maximize npv.
 			}
-		}
+		
 
 		//////////////////////////////////////////////////////////////////////
 		///////SHRINK EXPAND PROCEDURE////////////////////////////////////////
@@ -600,18 +597,17 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 					lv_costs += ga_rac[la_idl_act[(la_sub_pos[m] + 1)]];
 					//					if(la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m]+1)]]]==2){printf("Error++act_sta1");throw"Error";}
 					la_act_sta[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]++;
+
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 					//--> WRITE AWAY DECISION.
 
 
-					if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
-					else {
 						lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
 						if (lv_max_npv < lv_tmp_npv)
 						{
 							lv_max_npv = lv_tmp_npv;	// Maximize npv.
 						}
-					}
+					
 
 
 				} while (la_sub_pos[m] < (la_idl_act[0] - 1));	// Do until the value at the position reaches its maximum.
@@ -650,14 +646,13 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 
 					//--> WRITE AWAY DECISION.
-					if (multithread)list_parallel_f_fnd.push_back(async(parallel_f_fnd, &lv_max_npv, lv_costs, i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
-					else {
+					
 						lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
 						if (lv_max_npv < lv_tmp_npv)
 						{
 							lv_max_npv = lv_tmp_npv;	// Maximize npv.
 						}
-					}
+					
 
 				} while ((m > 0) && (la_sub_pos[m] == (la_idl_act[0] - 1)));	// Do as long as: a) the first activity has not yet been reached, b) the activity is still at its maximum.
 
@@ -688,12 +683,6 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	//////////////////////////////////////////////////////////////////////////
 	///////////RETURN NPV CORRESPONDING TO THE OPTIMAL DECISION///////////////
 	//////////////////////////////////////////////////////////////////////////
-	if (multithread)
-	{
-		list<future<bool>> ::iterator it;
-		for (it = list_parallel_f_fnd.begin(); it != list_parallel_f_fnd.end(); ++it)
-			it->get();
-	}
 
 	return lv_max_npv;
 }
@@ -1007,24 +996,7 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 
 	return lm_npv_str[i][j][lv_nr16_cut][lv_cut_upper];	// Return the corresponding NPV value.
 }
-std::mutex mtx;
-bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str) {
-	add += f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc_ij, lm_ter_str, lm_npv_str);
-	mtx.lock();
-	if (*max < add)
-		* max = add;
-	mtx.unlock();
-	return true;
-}
-std::mutex mtx2;
-bool parallel_f_dec(float* f,unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_idl, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str)
-{
-	double d = static_cast<float>(f_dec(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_idl, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str));
-	mtx2.lock();
-	*f = d;
-	mtx2.unlock();
-	return true;
-}
+
 void f_ter2(unsigned short int i, unsigned short int j, unsigned long int**** lm_ter_str, float**** lm_npv_str)		// Construct tertiary structure.
 {
 	//////////////////////////////////////////////////////////////////////////
@@ -1128,12 +1100,12 @@ void f_ter2(unsigned short int i, unsigned short int j, unsigned long int**** lm
 		z0 = 0;
 		for (l = 0; l < gm_nio_ptg[i][j][0]; l++)	// Check if finishing this activity establishes any of the links.
 		{
-			if (lm_lnk_mem[l][m] == 1)	// Activity la_ptg_act[m+1] has the potential to establish link l.
+			if (lm_lnk_mem[l][m] == 1&& la_lnk_fin[l] == 1)	// Activity la_ptg_act[m+1] has the potential to establish link l. Finishing the activity would imply that we establish a link (i.e. enter a new ptg).
 			{
-				if (la_lnk_fin[l] == 1)	// Finishing the activity would imply that we establish a link (i.e. enter a new ptg).
-				{
-					z0 = 1;	// Indicate that finishing the activity establishes a link.
-				}
+				
+					z0 = 1;	
+					break;
+				
 			}
 		}
 		if (z0 == 0)	// We can finish the activity without establishing a link.

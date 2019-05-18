@@ -271,6 +271,7 @@ void f_udc(void)
 	if(gv_noprint==0)
 	{
 		m2=0;
+#pragma omp parallel for schedule(dynamic) reduction(+:m2)
 		for(i2=0;i2<gv_n;i2++)
 		{
 			for(j2=0;j2<ga_ptg[i2];j2++)
