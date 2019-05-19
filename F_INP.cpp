@@ -9,7 +9,6 @@ void f_inp(void)
 	unsigned short int	i;			// Simple counter.
 	unsigned short int	j;			// Simple counter.
 	unsigned short int	k;			// Simple counter.
-
 	unsigned short int	z3;			// Temporary input reading variable; represents the successor number.
 
 	//////////////////////////////////////////////////////////////////////////
@@ -24,7 +23,6 @@ void f_inp(void)
 
 		printf("\n");
 		printf("Batch RANLIB 10-120 activities \n");
-
 		gv_rangen=1;
 		gv_batch=1;
 		ga_batch[1]=1;
@@ -33,7 +31,7 @@ void f_inp(void)
 		// CUSTOM STARTING POINT
 		printf("Choose RANGEN instance (1-1050)");
 		//scanf_s("%d", &ga_batch[1]);
-		ga_batch[1] = 750;
+		ga_batch[1] = 250;
 	}
 	else	// This is a batching assignment.
 	{
