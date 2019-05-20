@@ -464,8 +464,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	//////////////////////////////////////////////////////////////////////////
 	double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Given a decision, computes the npv
 	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
-	bool parallel_f_fnd(double* max, double add, unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);
-
+	
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZATION/////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -480,16 +479,15 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	///////////DO NOT START ADDITIONAL ACTIVITIES/////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-#pragma omp parallel for private(lv_tmp_npv,k) if(gv_bnr>1)
+//#pragma omp parallel for
 	for (k = 0; k < gv_bnr; k++)
 	{
 		if (la_bin_bus[k] > 0)
 		{
 			lv_tmp_npv = f_npv(i, j, la_act_sta, la_ptg_act, la_ptg_act_inv, la_bin_fin, la_bin_bus, lm_lib_act_lst, lm_lnk_act, lm_bin_lnk, lm_ter_str, lm_npv_str);
-#pragma omp critical
 			if (lv_max_npv < lv_tmp_npv)
 				lv_max_npv = lv_tmp_npv;	// Maximize npv.
-
+			break;
 		}
 	}
 
@@ -514,7 +512,6 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 		//////////////////////////////////////////////////////////////////////
 
 		la_idl_act[0] = 0;
-
 		for (k = 0; k < gv_bnr; k++)
 		{
 			// Check first 16 bits.
