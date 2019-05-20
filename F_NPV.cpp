@@ -137,14 +137,14 @@ unsigned long int f_mem(void)
 	unsigned short int	* la_lnk_nra;			// Local array link number of activities. Holds the number of shared activities between a ptg and the linked ptg.
 	unsigned short int	* la_lnk_fin;			// Local array link finish. Indicates if a link is established (just a copy of la_lnk_nra).
 	unsigned short int	* la_act_sta;			// Local array activity status.
-
+	unsigned short int** lm_lnk_mem_sp;
 	double				lv_mem;					// Local variable holding the current memory consumption.
 
 	unsigned short int	i;	// Simple counter.
 	unsigned short int	j;	// Simple counter.
 	unsigned short int	l;	// Simple counter.
 	unsigned short int	m;	// Simple counter.
-
+	unsigned short int	cn;
 	unsigned short int	z1;
 	bool				z0;
 
@@ -214,7 +214,24 @@ unsigned long int f_mem(void)
 			//////////////////////////////////////////////////////////////////
 
 			f_rid_ptg_act(i,j,la_ptg_act,la_ptg_act_inv,la_lnk_nra,lm_lnk_mem);	// Retrieve and identify ptg activities.
+			lm_lnk_mem_sp = new unsigned short int* [la_ptg_act[0]];
+			for (m = 0; m < la_ptg_act[0]; m++)	// Check all activities in this ptg.
+			{
+				unsigned short int* tmp = new unsigned short int[gm_nio_ptg[i][j][0] + 1];
+				tmp[0] = 1;
+				for (l = 0; l < gm_nio_ptg[i][j][0]; l++)
+				{
+					if (lm_lnk_mem[l][m] == 1) {
+						tmp[tmp[0]] = l;
+						tmp[0]++;
+					}
+				}
+				lm_lnk_mem_sp[m] = new unsigned short int[tmp[0]];
+				for (cn = 0; cn < tmp[0]; cn++)
+					lm_lnk_mem_sp[m][cn] = tmp[cn];
+				delete tmp;
 
+			}
 			//////////////////////////////////////////////////////////////////
 			///INITIALIZATION OF ACTIVITY STATUS//////////////////////////////
 			//////////////////////////////////////////////////////////////////
@@ -231,25 +248,22 @@ unsigned long int f_mem(void)
 			for(m=0;m<la_ptg_act[0];m++)	// Check all activities in this ptg.
 			{
 				z0=0;
-				for(l=0;l<gm_nio_ptg[i][j][0];l++)	// Check if finishing this activity establishes any of the links.
+				for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check if finishing this activity establishes any of the links.
 				{
-					if(lm_lnk_mem[l][m]==1)	// Activity la_ptg_act[m+1] has the potential to establish link l.
-					{
-						if(la_lnk_fin[l]==1)	// Finishing the activity would imply that we establish a link (i.e. enter a new ptg).
+						if(la_lnk_fin[lm_lnk_mem_sp[m][l]] ==1)	// Finishing the activity would imply that we establish a link (i.e. enter a new ptg).
 						{
 							z0=1;	// Indicate that finishing the activity establishes a link.
 						}
-					}
+					
 				}
 				if(z0==0)	// We can finish the activity without establishing a link.
 				{
 					la_act_sta[m]=2;	// Finish the activity.
-					for(l=0;l<gm_nio_ptg[i][j][0];l++)	// Record the impact of finishing activity la_ptg_act[m+1].
+					for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 					{
-						if(lm_lnk_mem[l][m]==1)	// Activity la_ptg_act[m+1] has the potential to establish link l.
-						{
-							la_lnk_fin[l]--;
-						}
+
+						la_lnk_fin[lm_lnk_mem_sp[m][l]]--;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+
 					}
 				}
 				else	// We cannot finish the activity. Its status is maximized at value 1.
@@ -270,12 +284,9 @@ unsigned long int f_mem(void)
 				// You end up at the last activity whose value is maximized.
 				if(la_act_sta[m]==2)	// Unfinishing the last activity will impact la_lnk_fin.
 				{
-					for(l=0;l<gm_nio_ptg[i][j][0];l++)	// Record the impact of finishing activity la_ptg_act[m+1].
+					for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 					{
-						if(lm_lnk_mem[l][m]==1)
-						{
-							la_lnk_fin[l]++;	// Activity la_ptg_act[m+1] is no longer finished. Therefore, an additional member activity may be finished before link l is established.
-						}
+												la_lnk_fin[lm_lnk_mem_sp[m][l]]++;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
 					}
 					la_act_sta[m]--;	// Decrease the status of the last activity.
 					gm_ptg_nrc[i][j]++;	// 1 combination (where last activity status equals 2).
@@ -314,12 +325,11 @@ unsigned long int f_mem(void)
 				{
 					if(la_act_sta[m]==2)	// Unfinishing the activity will impact la_lnk_fin.
 					{
-						for(l=0;l<gm_nio_ptg[i][j][0];l++)	// Record the impact of unfinishing activity la_ptg_act[m+1].
+						for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 						{
-							if(lm_lnk_mem[l][m]==1)
-							{
-								la_lnk_fin[l]++;	// Activity la_ptg_act[m+1] is no longer finished. Therefore, an additional member activity may be finished before link l is established.
-							}
+
+							la_lnk_fin[lm_lnk_mem_sp[m][l]]++;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+
 						}
 					}
 					la_act_sta[m]--;	// Decrease the status of the activity.
@@ -328,26 +338,17 @@ unsigned long int f_mem(void)
 					{
 						m++;	// Increase the position. Minimal position (value 0) will be maximized.
 						z1=0;	// Indicates if finishing activity la_ptg_act[m+1] would establish an unwanted link.
-						for(l=0;l<gm_nio_ptg[i][j][0];l++)	// Check all links.
+						for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 						{
-							if(lm_lnk_mem[l][m]==1)	// Finishing activity la_ptg_act[m+1] has the potential to establish link l.
-							{
-								if(la_lnk_fin[l]==1)	// Finishing activity la_ptg_act[m+1] would establish an unwanted link.
-								{
-									z1=1;	// Indicate that the status of activity la_ptg_act[m+1] is not to be maximized.
-								}
-							}
+														if(la_lnk_fin[lm_lnk_mem_sp[m][l]]==1)z1=1;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
 						}
 						if(z1==0)	// Activity la_ptg_act[m+1] is allowed to finish.
 						{
 							la_act_sta[m]=2;	// Indicate that activity la_ptg_act[m+1] has finished.
-							for(l=0;l<gm_nio_ptg[i][j][0];l++)	// Check all links.
+							for(l=1;l<lm_lnk_mem_sp[m][0];l++)	// Check all links.
 							{
-								if(lm_lnk_mem[l][m]==1)
-								{
-									la_lnk_fin[l]--;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
-								}
-							}
+																	la_lnk_fin[lm_lnk_mem_sp[m][l]]--;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+															}
 						}
 						else
 						{
@@ -397,7 +398,8 @@ unsigned long int f_mem(void)
 			{
 				gv_mem=lv_mem;	// Increase global memory requirement.
 			}
-
+			for (l = 0; l < la_ptg_act[0]; l++)
+			delete	lm_lnk_mem_sp[l];
 			for(l=0;l<gm_nio_ptg[i][j][0];l++)
 			{
 				delete lm_lnk_mem[l];
@@ -406,7 +408,7 @@ unsigned long int f_mem(void)
 			delete la_lnk_nra;
 			delete la_lnk_fin;
 			delete la_act_sta;
-
+			delete lm_lnk_mem_sp;
 			 //DELETE THIS IF YOU WANT ALL DATA!!!
 			//if(static_cast<float>(static_cast<double>(8*gv_mem)/static_cast<double>(ga_bin[20]))>gv_max_mem)
 			//{
