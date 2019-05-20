@@ -31,7 +31,7 @@ void f_inp(void)
 		// CUSTOM STARTING POINT
 		printf("Choose RANGEN instance (1-1050)");
 		//scanf_s("%d", &ga_batch[1]);
-		ga_batch[1] = 250;
+		ga_batch[1] = 750;
 	}
 	else	// This is a batching assignment.
 	{

@@ -253,6 +253,8 @@ unsigned long int f_mem(void)
 					if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)	// Finishing the activity would imply that we establish a link (i.e. enter a new ptg).
 					{
 						z0 = 1;	// Indicate that finishing the activity establishes a link.
+						la_act_sta[m] = 1;// We cannot finish the activity. Its status is maximized at value 1.
+						break;
 					}
 
 				}
@@ -266,10 +268,7 @@ unsigned long int f_mem(void)
 
 					}
 				}
-				else	// We cannot finish the activity. Its status is maximized at value 1.
-				{
-					la_act_sta[m] = 1;
-				}
+
 			}
 			m = la_ptg_act[0] - 1;	// Indicate that m should start at the last position (with the last activity).
 			z0 = 0;	// Indicates that not all combinations have been found.
@@ -290,21 +289,18 @@ unsigned long int f_mem(void)
 					}
 					la_act_sta[m]--;	// Decrease the status of the last activity.
 					gm_ptg_nrc[i][j]++;	// 1 combination (where last activity status equals 2).
-					if (gm_ptg_nrc[i][j] >= ga_bin_min[32])
-					{
-						printf("too much combinations");
-						throw "too much combinations";
-					}
-				}
-				// You end up at a situation in which the value of the last activity equals 1.
-				la_act_sta[m]--;
 
+				}
 				// You end up at a situation in which the value of the last activity equals 0.
 				if (gm_ptg_nrc[i][j] >= ga_bin_min[32])
 				{
 					printf("too much combinations");
 					throw "too much combinations";
 				}
+				// You end up at a situation in which the value of the last activity equals 1.
+				la_act_sta[m]--;
+
+
 				gm_ptg_nrc[i][j] += 2;	// 2 combinations (where last activity status equals 1 and 0 respectively)
 
 				// You end up at a position which is minimized. Keep increasing position until we arrive at a position at which the value is not yet minimized.
@@ -314,22 +310,17 @@ unsigned long int f_mem(void)
 				}
 
 				// You end up at a position which may be decreased or at the first position.
-				if (m == 0)
+				if (m == 0 && la_act_sta[m] == 0)
 				{
-					if (la_act_sta[m] == 0)	// All combinations have been found; write away cycle class and sequence data for all activities (the last cycle).
-					{
-						z0 = 1;	// All combinations have been found.
-					}
+					break;
 				}
-				if (z0 == 0)	// There are still combinations to be found.
+				else 	// There are still combinations to be found.
 				{
 					if (la_act_sta[m] == 2)	// Unfinishing the activity will impact la_lnk_fin.
 					{
 						for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 						{
-
 							la_lnk_fin[lm_lnk_mem_sp[m][l]]++;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
-
 						}
 					}
 					la_act_sta[m]--;	// Decrease the status of the activity.
@@ -340,7 +331,12 @@ unsigned long int f_mem(void)
 						z1 = 0;	// Indicates if finishing activity la_ptg_act[m+1] would establish an unwanted link.
 						for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 						{
-							if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)z1 = 1;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+							if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)
+							{
+								z1 = 1;
+								la_act_sta[m] = 1;// Activity la_ptg_act[m+1] is not allowed to finish, so it just starts.
+								break;
+							}	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
 						}
 						if (z1 == 0)	// Activity la_ptg_act[m+1] is allowed to finish.
 						{
@@ -350,13 +346,10 @@ unsigned long int f_mem(void)
 								la_lnk_fin[lm_lnk_mem_sp[m][l]]--;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
 							}
 						}
-						else
-						{
-							la_act_sta[m] = 1;	// Activity la_ptg_act[m+1] is not allowed to finish, so it just starts.
-						}
+
 					} while (m < la_ptg_act[0] - 1);	// Do until you arrive at the last activity.
 				}
-			} while (z0 == 0);	// Repeat reverse shrink-expand procedure until all combinations have been found.
+			} while (true);	// Repeat reverse shrink-expand procedure until all combinations have been found.
 			gv_tot_nrc += gm_ptg_nrc[i][j];	// Keep track of the total number of combinations.
 			// Record the maximum number of parallel activities.
 			if (la_ptg_act[0] > gv_mpa)
