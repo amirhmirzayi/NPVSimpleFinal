@@ -581,8 +581,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 		if (la_idl_act[0] > 1)	// Multiple idle activities are available for starting.
 		{
-			z1 = 0;	// Indicate that not all decisions have been found.
-			do
+		do
 			{
 				do	// Expand.
 				{
@@ -598,16 +597,11 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 					//--> WRITE AWAY DECISION.
-
-
-					lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
+					lv_tmp_npv = f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str)+ lv_costs;
 					if (lv_max_npv < lv_tmp_npv)
 					{
 						lv_max_npv = lv_tmp_npv;	// Maximize npv.
 					}
-
-
-
 				} while (la_sub_pos[m] < (la_idl_act[0] - 1));	// Do until the value at the position reaches its maximum.
 
 				do	// Shrink.
@@ -645,22 +639,14 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 					//--> WRITE AWAY DECISION.
 
-					lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
+					lv_tmp_npv =  f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str)+ lv_costs;
 					if (lv_max_npv < lv_tmp_npv)
 					{
 						lv_max_npv = lv_tmp_npv;	// Maximize npv.
 					}
 
-
 				} while ((m > 0) && (la_sub_pos[m] == (la_idl_act[0] - 1)));	// Do as long as: a) the first activity has not yet been reached, b) the activity is still at its maximum.
-
-				if (m == 0 && la_sub_pos[m] == (la_idl_act[0] - 1))
-				{
-
-					z1 = 1;	// All decisions have been found.
-					break;
-				}
-			} while (z1 == 0);	// Do until all decisions have been found. If all decisions have been found, only the last idle activity is set busy, correct this and exit this function. If only 1 idle action was present, this action is also the last action...
+			} while (m != 0 || la_sub_pos[m] != (la_idl_act[0] - 1));	// Do until all decisions have been found. If all decisions have been found, only the last idle activity is set busy, correct this and exit this function. If only 1 idle action was present, this action is also the last action...
 		}
 
 		lv_nr32 = static_cast<int>(floor(static_cast<double>(la_idl_act[(la_sub_pos[m] + 1)]) / static_cast<double>(32)));
