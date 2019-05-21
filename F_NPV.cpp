@@ -129,23 +129,10 @@ bool f_mem(void)
 	///////////DEFINE LOCAL VARIABLES/////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	bool** lm_lnk_mem;			// Local matrix link membership. Is activity i a member of link l or not.
 
-	unsigned short int* la_ptg_act;			// Local array ptg activity. Which activities are a member of the ptg in question.
-	unsigned short int* la_ptg_act_inv;		// Local array ptg activity inverse. The inverse relationship of la_ptg_act.
-	unsigned short int* la_lnk_nra;			// Local array link number of activities. Holds the number of shared activities between a ptg and the linked ptg.
-	unsigned short int* la_lnk_fin;			// Local array link finish. Indicates if a link is established (just a copy of la_lnk_nra).
-	unsigned short int* la_act_sta;			// Local array activity status.
-	unsigned short int** lm_lnk_mem_sp;
 	double				lv_mem;					// Local variable holding the current memory consumption.
 
-	unsigned short int	i;	// Simple counter.
-	unsigned short int	j;	// Simple counter.
-	unsigned short int	l;	// Simple counter.
-	unsigned short int	m;	// Simple counter.
-	unsigned short int	cn;
-	unsigned short int	z1;
-	bool				z0;
+
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
@@ -163,8 +150,7 @@ bool f_mem(void)
 	gm_ptg_nrc[0] = new unsigned long int[1];
 	gm_ptg_nrc[0][0] = 0;	// At the first node, there are no combinations.
 
-	la_ptg_act = new unsigned short int[gv_n];
-	la_ptg_act_inv = new unsigned short int[gv_n];
+	
 
 	gv_avg_mem = 0;
 	gv_avg_mpa = 0;
@@ -176,7 +162,7 @@ bool f_mem(void)
 	gv_nr_udc = 0;
 	gv_max_nr_udc = 0;
 
-	for (i = (gv_n - 2); i > 0; i--)
+	for (unsigned short int i = (gv_n - 2); i > 0; i--)
 	{
 		gm_ptg_nrc[i] = new unsigned long int[ga_ptg[i]];
 	}
@@ -184,24 +170,30 @@ bool f_mem(void)
 	//////////////////////////////////////////////////////////////////////////
 	///////////DETERMINE MEMORY REQUIREMENT///////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
+
 	{
-		for (i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
+		
+		for (unsigned short int i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
 		{
 
 			//////////////////////////////////////////////////////////////////////
 			///////INITIALIZATION/////////////////////////////////////////////////
 			//////////////////////////////////////////////////////////////////////
 		
-			for (j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
+			for (unsigned short int j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
 			{
-
+				
+			
+				unsigned short int	l;	// Simple counter.
+				unsigned short int	m;	// Simple counter.
+				unsigned short int	cn;
 				//////////////////////////////////////////////////////////////////////
 				///////INITIALIZATION/////////////////////////////////////////////////
 				//////////////////////////////////////////////////////////////////////
 
 				gm_ptg_nrc[i][j] = 0;
-				lm_lnk_mem = new bool* [gm_nio_ptg[i][j][0]];	// Defines if an activity is a member of an outgoing link (there are gm_nio_ptg[i][j][0] outgoing links at this ptg).
-				la_lnk_nra = new unsigned short int[gm_nio_ptg[i][j][0]];	// Create number of activities array (for each outgoing link).
+				bool** lm_lnk_mem=lm_lnk_mem = new bool* [gm_nio_ptg[i][j][0]];	// Defines if an activity is a member of an outgoing link (there are gm_nio_ptg[i][j][0] outgoing links at this ptg).
+				unsigned short int* la_lnk_nra= new unsigned short int[gm_nio_ptg[i][j][0]];	// Create number of activities array (for each outgoing link).
 
 			//////////////////////////////////////////////////////////////////////
 			///////FUNCTIONS AND PROGRAM//////////////////////////////////////////
@@ -210,13 +202,19 @@ bool f_mem(void)
 				//////////////////////////////////////////////////////////////////
 				///FUNCTION F_RID_PTG_ACT/////////////////////////////////////////
 				//////////////////////////////////////////////////////////////////
+				unsigned short int* la_ptg_act;			// Local array ptg activity. Which activities are a member of the ptg in question.
+				unsigned short int* la_ptg_act_inv;		// Local array ptg activity inverse. The inverse relationship of la_ptg_act.
 
+
+				la_ptg_act = new unsigned short int[gv_n];
+				la_ptg_act_inv = new unsigned short int[gv_n];
 				f_rid_ptg_act(i, j, la_ptg_act, la_ptg_act_inv, la_lnk_nra, lm_lnk_mem);	// Retrieve and identify ptg activities.
-
-				lm_lnk_mem_sp = new unsigned short int* [la_ptg_act[0]];
+				
+				unsigned short int** lm_lnk_mem_sp= new unsigned short int* [la_ptg_act[0]];
+				unsigned short int* tmp;
 				for (m = 0; m < la_ptg_act[0]; m++)	// Check all activities in this ptg.
 				{
-					unsigned short int* tmp = new unsigned short int[gm_nio_ptg[i][j][0] + 1];
+					tmp = new unsigned short int[gm_nio_ptg[i][j][0] + 1];
 					tmp[0] = 1;
 					for (l = 0; l < gm_nio_ptg[i][j][0]; l++)
 					{
@@ -236,28 +234,33 @@ bool f_mem(void)
 				//////////////////////////////////////////////////////////////////
 
 				// Create and initialize la_lnk_fin; which indicates whether additional activities of a given link are allowed to finish (just a copy of la_lnk_nra).
+				unsigned short int* la_lnk_fin;			// Local array link finish. Indicates if a link is established (just a copy of la_lnk_nra).
+
 				la_lnk_fin = new unsigned short int[gm_nio_ptg[i][j][0]];
 				for (l = 0; l < gm_nio_ptg[i][j][0]; l++)	// Check all links moving from this ptg.
 				{
 					la_lnk_fin[l] = la_lnk_nra[l];	// As long as la_lnk_fin is larger than 1; there is still a member activity of link l that may be finished (without establishing link l).
 				}
 				// Create la_act_sta which holds the status of all activities.
+				unsigned short int* la_act_sta;			// Local array activity status.
+
 				la_act_sta = new unsigned short int[la_ptg_act[0]];	// The dimension of la_act_sta is determined by the number of activities in this ptg.
 				// Initialize/reset la_act_sta. We start with the combination in which all activities have their highest possible value.
+				bool z0;
 				for (m = 0; m < la_ptg_act[0]; m++)	// Check all activities in this ptg.
 				{
-					z0 = 0;
+					z0 = false;
 					for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check if finishing this activity establishes any of the links.
 					{
 						if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)	// Finishing the activity would imply that we establish a link (i.e. enter a new ptg).
 						{
-							z0 = 1;	// Indicate that finishing the activity establishes a link.
+							z0 = true;	// Indicate that finishing the activity establishes a link.
 							la_act_sta[m] = 1;// We cannot finish the activity. Its status is maximized at value 1.
 							break;
 						}
 
 					}
-					if (z0 == 0)	// We can finish the activity without establishing a link.
+					if (!z0)	// We can finish the activity without establishing a link.
 					{
 						la_act_sta[m] = 2;	// Finish the activity.
 						for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
@@ -270,7 +273,7 @@ bool f_mem(void)
 
 				}
 				m = la_ptg_act[0] - 1;	// Indicate that m should start at the last position (with the last activity).
-				z0 = 0;	// Indicates that not all combinations have been found.
+				z0 = false;	// Indicates that not all combinations have been found.
 
 				//////////////////////////////////////////////////////////////////
 				///SHRINK EXPAND PROCEDURE////////////////////////////////////////
@@ -327,17 +330,17 @@ bool f_mem(void)
 						do
 						{
 							m++;	// Increase the position. Minimal position (value 0) will be maximized.
-							z1 = 0;	// Indicates if finishing activity la_ptg_act[m+1] would establish an unwanted link.
+							bool z1 =false;	// Indicates if finishing activity la_ptg_act[m+1] would establish an unwanted link.
 							for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 							{
 								if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)
 								{
-									z1 = 1;
+									z1 = true;
 									la_act_sta[m] = 1;// Activity la_ptg_act[m+1] is not allowed to finish, so it just starts.
 									break;
 								}	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
 							}
-							if (z1 == 0)	// Activity la_ptg_act[m+1] is allowed to finish.
+							if (!z1)	// Activity la_ptg_act[m+1] is allowed to finish.
 							{
 								la_act_sta[m] = 2;	// Indicate that activity la_ptg_act[m+1] has finished.
 								for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
@@ -401,6 +404,8 @@ bool f_mem(void)
 				delete la_lnk_fin;
 				delete la_act_sta;
 				delete lm_lnk_mem_sp;
+				delete la_ptg_act;
+				delete la_ptg_act_inv;
 				//DELETE THIS IF YOU WANT ALL DATA!!!
 			   //if(static_cast<float>(static_cast<double>(8*gv_mem)/static_cast<double>(ga_bin[20]))>gv_max_mem)
 			   //{
@@ -415,9 +420,9 @@ bool f_mem(void)
 	///////////DESTRUCTION PHASE//////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	for (i = 0; i < gv_n; i++)
+	for (unsigned short int i = 0; i < gv_n; i++)
 	{
-		for (j = 0; j < ga_ptg[i]; j++)
+		for (unsigned short int  j = 0; j < ga_ptg[i]; j++)
 		{
 			delete gm_nio_ptg2[i][j];
 		}
@@ -425,8 +430,7 @@ bool f_mem(void)
 	}
 	delete gm_nio_ptg2;
 
-	delete la_ptg_act;
-	delete la_ptg_act_inv;
+	
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////DEFINE NPV COMPUTATION OPTION//////////////////////////////////
