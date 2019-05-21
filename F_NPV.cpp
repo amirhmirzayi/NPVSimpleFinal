@@ -1,12 +1,11 @@
 void f_npv(void)
 {
-	unsigned long int f_mem(void);	// Returns the chosen npv-computation option in function of the corresponding memory requirements.
+	bool f_mem(void);	// Returns the chosen npv-computation option in function of the corresponding memory requirements.
 	void f_npv2(void);	// Executes the second npv-computation option (store a minimum amount of data).
 	void f_store(void);	// Stores the results.
 	double f_en(void);
-
 	gv_clock_npv = clock();	// Start the clock.
-	if (static_cast<unsigned short int>(f_mem()) == 1)	// Computation option 1 is selected.
+	if (f_mem())	// Computation option 1 is selected.
 	{
 		f_npv2();
 	}
@@ -124,7 +123,7 @@ void f_store(void)
 	}
 }
 
-unsigned long int f_mem(void)
+bool f_mem(void)
 {
 	//////////////////////////////////////////////////////////////////////////
 	///////////DEFINE LOCAL VARIABLES/////////////////////////////////////////
@@ -185,233 +184,233 @@ unsigned long int f_mem(void)
 	//////////////////////////////////////////////////////////////////////////
 	///////////DETERMINE MEMORY REQUIREMENT///////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
-
-	for (i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
 	{
-
-		//////////////////////////////////////////////////////////////////////
-		///////INITIALIZATION/////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////
-
-		for (j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
+		for (i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
 		{
 
 			//////////////////////////////////////////////////////////////////////
 			///////INITIALIZATION/////////////////////////////////////////////////
 			//////////////////////////////////////////////////////////////////////
-
-			gm_ptg_nrc[i][j] = 0;
-
-			lm_lnk_mem = new bool* [gm_nio_ptg[i][j][0]];	// Defines if an activity is a member of an outgoing link (there are gm_nio_ptg[i][j][0] outgoing links at this ptg).
-			la_lnk_nra = new unsigned short int[gm_nio_ptg[i][j][0]];	// Create number of activities array (for each outgoing link).
-
-		//////////////////////////////////////////////////////////////////////
-		///////FUNCTIONS AND PROGRAM//////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////
-
-			//////////////////////////////////////////////////////////////////
-			///FUNCTION F_RID_PTG_ACT/////////////////////////////////////////
-			//////////////////////////////////////////////////////////////////
-
-			f_rid_ptg_act(i, j, la_ptg_act, la_ptg_act_inv, la_lnk_nra, lm_lnk_mem);	// Retrieve and identify ptg activities.
-			lm_lnk_mem_sp = new unsigned short int* [la_ptg_act[0]];
-			for (m = 0; m < la_ptg_act[0]; m++)	// Check all activities in this ptg.
+		
+			for (j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
 			{
-				unsigned short int* tmp = new unsigned short int[gm_nio_ptg[i][j][0] + 1];
-				tmp[0] = 1;
-				for (l = 0; l < gm_nio_ptg[i][j][0]; l++)
+
+				//////////////////////////////////////////////////////////////////////
+				///////INITIALIZATION/////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////
+
+				gm_ptg_nrc[i][j] = 0;
+				lm_lnk_mem = new bool* [gm_nio_ptg[i][j][0]];	// Defines if an activity is a member of an outgoing link (there are gm_nio_ptg[i][j][0] outgoing links at this ptg).
+				la_lnk_nra = new unsigned short int[gm_nio_ptg[i][j][0]];	// Create number of activities array (for each outgoing link).
+
+			//////////////////////////////////////////////////////////////////////
+			///////FUNCTIONS AND PROGRAM//////////////////////////////////////////
+			//////////////////////////////////////////////////////////////////////
+
+				//////////////////////////////////////////////////////////////////
+				///FUNCTION F_RID_PTG_ACT/////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////
+
+				f_rid_ptg_act(i, j, la_ptg_act, la_ptg_act_inv, la_lnk_nra, lm_lnk_mem);	// Retrieve and identify ptg activities.
+
+				lm_lnk_mem_sp = new unsigned short int* [la_ptg_act[0]];
+				for (m = 0; m < la_ptg_act[0]; m++)	// Check all activities in this ptg.
 				{
-					if (lm_lnk_mem[l][m] == 1) {
-						tmp[tmp[0]] = l;
-						tmp[0]++;
-					}
-				}
-				lm_lnk_mem_sp[m] = new unsigned short int[tmp[0]];
-				for (cn = 0; cn < tmp[0]; cn++)
-					lm_lnk_mem_sp[m][cn] = tmp[cn];
-				delete tmp;
-
-			}
-			//////////////////////////////////////////////////////////////////
-			///INITIALIZATION OF ACTIVITY STATUS//////////////////////////////
-			//////////////////////////////////////////////////////////////////
-
-			// Create and initialize la_lnk_fin; which indicates whether additional activities of a given link are allowed to finish (just a copy of la_lnk_nra).
-			la_lnk_fin = new unsigned short int[gm_nio_ptg[i][j][0]];
-			for (l = 0; l < gm_nio_ptg[i][j][0]; l++)	// Check all links moving from this ptg.
-			{
-				la_lnk_fin[l] = la_lnk_nra[l];	// As long as la_lnk_fin is larger than 1; there is still a member activity of link l that may be finished (without establishing link l).
-			}
-			// Create la_act_sta which holds the status of all activities.
-			la_act_sta = new unsigned short int[la_ptg_act[0]];	// The dimension of la_act_sta is determined by the number of activities in this ptg.
-			// Initialize/reset la_act_sta. We start with the combination in which all activities have their highest possible value.
-			for (m = 0; m < la_ptg_act[0]; m++)	// Check all activities in this ptg.
-			{
-				z0 = 0;
-				for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check if finishing this activity establishes any of the links.
-				{
-					if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)	// Finishing the activity would imply that we establish a link (i.e. enter a new ptg).
+					unsigned short int* tmp = new unsigned short int[gm_nio_ptg[i][j][0] + 1];
+					tmp[0] = 1;
+					for (l = 0; l < gm_nio_ptg[i][j][0]; l++)
 					{
-						z0 = 1;	// Indicate that finishing the activity establishes a link.
-						la_act_sta[m] = 1;// We cannot finish the activity. Its status is maximized at value 1.
-						break;
+						if (lm_lnk_mem[l][m]) {
+							tmp[tmp[0]] = l;
+							tmp[0]++;
+						}
 					}
+					lm_lnk_mem_sp[m] = new unsigned short int[tmp[0]];
+					for (cn = 0; cn < tmp[0]; cn++)
+						lm_lnk_mem_sp[m][cn] = tmp[cn];
+					delete tmp;
 
 				}
-				if (z0 == 0)	// We can finish the activity without establishing a link.
+				//////////////////////////////////////////////////////////////////
+				///INITIALIZATION OF ACTIVITY STATUS//////////////////////////////
+				//////////////////////////////////////////////////////////////////
+
+				// Create and initialize la_lnk_fin; which indicates whether additional activities of a given link are allowed to finish (just a copy of la_lnk_nra).
+				la_lnk_fin = new unsigned short int[gm_nio_ptg[i][j][0]];
+				for (l = 0; l < gm_nio_ptg[i][j][0]; l++)	// Check all links moving from this ptg.
 				{
-					la_act_sta[m] = 2;	// Finish the activity.
-					for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
+					la_lnk_fin[l] = la_lnk_nra[l];	// As long as la_lnk_fin is larger than 1; there is still a member activity of link l that may be finished (without establishing link l).
+				}
+				// Create la_act_sta which holds the status of all activities.
+				la_act_sta = new unsigned short int[la_ptg_act[0]];	// The dimension of la_act_sta is determined by the number of activities in this ptg.
+				// Initialize/reset la_act_sta. We start with the combination in which all activities have their highest possible value.
+				for (m = 0; m < la_ptg_act[0]; m++)	// Check all activities in this ptg.
+				{
+					z0 = 0;
+					for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check if finishing this activity establishes any of the links.
 					{
-
-						la_lnk_fin[lm_lnk_mem_sp[m][l]]--;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+						if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)	// Finishing the activity would imply that we establish a link (i.e. enter a new ptg).
+						{
+							z0 = 1;	// Indicate that finishing the activity establishes a link.
+							la_act_sta[m] = 1;// We cannot finish the activity. Its status is maximized at value 1.
+							break;
+						}
 
 					}
-				}
-
-			}
-			m = la_ptg_act[0] - 1;	// Indicate that m should start at the last position (with the last activity).
-			z0 = 0;	// Indicates that not all combinations have been found.
-
-			//////////////////////////////////////////////////////////////////
-			///SHRINK EXPAND PROCEDURE////////////////////////////////////////
-			//////////////////////////////////////////////////////////////////
-
-			// Reverse shrink-expand procedure. Decrease the value at a position until the minimum is reached. If the minimum is reached; increase the position. If the value at the new position is minimal as well, further increase the position. Eventually you end up at a position at which the value may be decreased. Decrease the value and reset all previous activities (reset implying to maximize activity status).
-			do
-			{
-				// You end up at the last activity whose value is maximized.
-				if (la_act_sta[m] == 2)	// Unfinishing the last activity will impact la_lnk_fin.
-				{
-					for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
+					if (z0 == 0)	// We can finish the activity without establishing a link.
 					{
-						la_lnk_fin[lm_lnk_mem_sp[m][l]]++;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+						la_act_sta[m] = 2;	// Finish the activity.
+						for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
+						{
+
+							la_lnk_fin[lm_lnk_mem_sp[m][l]]--;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+
+						}
 					}
-					la_act_sta[m]--;	// Decrease the status of the last activity.
-					gm_ptg_nrc[i][j]++;	// 1 combination (where last activity status equals 2).
 
 				}
-				// You end up at a situation in which the value of the last activity equals 0.
-				if (gm_ptg_nrc[i][j] >= ga_bin_min[32])
-				{
-					printf("too much combinations");
-					throw "too much combinations";
-				}
-				// You end up at a situation in which the value of the last activity equals 1.
-				la_act_sta[m]--;
+				m = la_ptg_act[0] - 1;	// Indicate that m should start at the last position (with the last activity).
+				z0 = 0;	// Indicates that not all combinations have been found.
 
+				//////////////////////////////////////////////////////////////////
+				///SHRINK EXPAND PROCEDURE////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////
 
-				gm_ptg_nrc[i][j] += 2;	// 2 combinations (where last activity status equals 1 and 0 respectively)
-
-				// You end up at a position which is minimized. Keep increasing position until we arrive at a position at which the value is not yet minimized.
-				while ((la_act_sta[m] == 0) && (m > 0))	// Do until you arrive at a) an activity which status can further be decreased; b) the first activity.
+				// Reverse shrink-expand procedure. Decrease the value at a position until the minimum is reached. If the minimum is reached; increase the position. If the value at the new position is minimal as well, further increase the position. Eventually you end up at a position at which the value may be decreased. Decrease the value and reset all previous activities (reset implying to maximize activity status).
+				do
 				{
-					m--;	// Decrease the position.
-				}
-
-				// You end up at a position which may be decreased or at the first position.
-				if (m == 0 && la_act_sta[m] == 0)
-				{
-					break;
-				}
-				else 	// There are still combinations to be found.
-				{
-					if (la_act_sta[m] == 2)	// Unfinishing the activity will impact la_lnk_fin.
+					// You end up at the last activity whose value is maximized.
+					if (la_act_sta[m] == 2)	// Unfinishing the last activity will impact la_lnk_fin.
 					{
 						for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 						{
 							la_lnk_fin[lm_lnk_mem_sp[m][l]]++;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
 						}
+						la_act_sta[m]--;	// Decrease the status of the last activity.
+						gm_ptg_nrc[i][j]++;	// 1 combination (where last activity status equals 2).
+
 					}
-					la_act_sta[m]--;	// Decrease the status of the activity.
-					// Start resetting; maximizing prior activities.
-					do
+					// You end up at a situation in which the value of the last activity equals 0.
+					if (gm_ptg_nrc[i][j] >= ga_bin_min[32])
 					{
-						m++;	// Increase the position. Minimal position (value 0) will be maximized.
-						z1 = 0;	// Indicates if finishing activity la_ptg_act[m+1] would establish an unwanted link.
-						for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
+						printf("too much combinations");
+						throw "too much combinations";
+					}
+					// You end up at a situation in which the value of the last activity equals 1.
+					la_act_sta[m]--;
+
+
+					gm_ptg_nrc[i][j] += 2;	// 2 combinations (where last activity status equals 1 and 0 respectively)
+
+					// You end up at a position which is minimized. Keep increasing position until we arrive at a position at which the value is not yet minimized.
+					while ((la_act_sta[m] == 0) && (m > 0))	// Do until you arrive at a) an activity which status can further be decreased; b) the first activity.
+					{
+						m--;	// Decrease the position.
+					}
+
+					// You end up at a position which may be decreased or at the first position.
+					if (m == 0 && la_act_sta[m] == 0)
+					{
+						break;
+					}
+					else 	// There are still combinations to be found.
+					{
+						if (la_act_sta[m] == 2)	// Unfinishing the activity will impact la_lnk_fin.
 						{
-							if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)
-							{
-								z1 = 1;
-								la_act_sta[m] = 1;// Activity la_ptg_act[m+1] is not allowed to finish, so it just starts.
-								break;
-							}	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
-						}
-						if (z1 == 0)	// Activity la_ptg_act[m+1] is allowed to finish.
-						{
-							la_act_sta[m] = 2;	// Indicate that activity la_ptg_act[m+1] has finished.
 							for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 							{
-								la_lnk_fin[lm_lnk_mem_sp[m][l]]--;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+								la_lnk_fin[lm_lnk_mem_sp[m][l]]++;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
 							}
 						}
+						la_act_sta[m]--;	// Decrease the status of the activity.
+						// Start resetting; maximizing prior activities.
+						do
+						{
+							m++;	// Increase the position. Minimal position (value 0) will be maximized.
+							z1 = 0;	// Indicates if finishing activity la_ptg_act[m+1] would establish an unwanted link.
+							for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
+							{
+								if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)
+								{
+									z1 = 1;
+									la_act_sta[m] = 1;// Activity la_ptg_act[m+1] is not allowed to finish, so it just starts.
+									break;
+								}	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+							}
+							if (z1 == 0)	// Activity la_ptg_act[m+1] is allowed to finish.
+							{
+								la_act_sta[m] = 2;	// Indicate that activity la_ptg_act[m+1] has finished.
+								for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
+								{
+									la_lnk_fin[lm_lnk_mem_sp[m][l]]--;	// Indicate that link l (of which activity la_ptg_act[m+1] is a member activity) is one step closer to becoming established.
+								}
+							}
 
-					} while (m < la_ptg_act[0] - 1);	// Do until you arrive at the last activity.
-				}
-			} while (true);	// Repeat reverse shrink-expand procedure until all combinations have been found.
-			gv_tot_nrc += gm_ptg_nrc[i][j];	// Keep track of the total number of combinations.
-			// Record the maximum number of parallel activities.
-			if (la_ptg_act[0] > gv_mpa)
-			{
-				gv_mpa = la_ptg_act[0];
-			}
-			// Record average number of parallel activities per udc.
-			gv_avg_mpa += la_ptg_act[0];
+						} while (m < la_ptg_act[0] - 1);	// Do until you arrive at the last activity.
+					}
+				} while (true);	// Repeat reverse shrink-expand procedure until all combinations have been found.
 
-			//////////////////////////////////////////////////////////////////////
-			///////DESTRUCTION PHASE PRIOR TO MOVING TO THE NEXT PTG//////////////
-			//////////////////////////////////////////////////////////////////////
-
-			lv_mem += gm_ptg_nrc[i][j];	// Increase memory requirement.
-			gv_nr_udc++;
-
-			for (l = 0; l < gm_nio_ptg2[i][j][0]; l++)	// Check all outgoing links.
-			{
-				if (gm_nio_ptg2[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1] == 1)	// Is the incoming link at its minimum?
+				// Record the maximum number of parallel activities.
+				if (la_ptg_act[0] > gv_mpa)
 				{
-					lv_mem -= gm_ptg_nrc[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]];
-					gv_nr_udc--;
+					gv_mpa = la_ptg_act[0];
 				}
-				else	// The incoming link is not yet at its minimum. Decrease gm_nio_ptg2. Memory is still required.
+				// Record average number of parallel activities per udc.
+				gv_avg_mpa += la_ptg_act[0];
+				gv_tot_nrc += gm_ptg_nrc[i][j];	// Keep track of the total number of combinations.
+				//////////////////////////////////////////////////////////////////////
+				///////DESTRUCTION PHASE PRIOR TO MOVING TO THE NEXT PTG//////////////
+				//////////////////////////////////////////////////////////////////////
+
+				lv_mem += gm_ptg_nrc[i][j];	// Increase memory requirement.
+				gv_nr_udc++;
+
+				for (l = 0; l < gm_nio_ptg2[i][j][0]; l++)	// Check all outgoing links.
 				{
-					gm_nio_ptg2[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1]--;
+					if (gm_nio_ptg2[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1] == 1)	// Is the incoming link at its minimum?
+					{
+						lv_mem -= gm_ptg_nrc[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]];
+						gv_nr_udc--;
+					}
+					else	// The incoming link is not yet at its minimum. Decrease gm_nio_ptg2. Memory is still required.
+					{
+						gm_nio_ptg2[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1]--;
+					}
 				}
-			}
 
-			gv_avg_mem += (gm_ptg_nrc[i][j] * lv_mem);	// Indicate that gm_ptg_nrc[i][j] combinations (i.e. states) require lv_mem memory requirements.
-			gv_avg_udc += (gm_ptg_nrc[i][j] * gv_nr_udc);	// Indicate that gm_ptg_nrc[i][j] combinations (i.e. states) require lv_mem udcs in memory.
+				gv_avg_mem += (gm_ptg_nrc[i][j] * lv_mem);	// Indicate that gm_ptg_nrc[i][j] combinations (i.e. states) require lv_mem memory requirements.
+				gv_avg_udc += (gm_ptg_nrc[i][j] * gv_nr_udc);	// Indicate that gm_ptg_nrc[i][j] combinations (i.e. states) require lv_mem udcs in memory.
 
-			if (gv_nr_udc > gv_max_nr_udc)
-			{
-				gv_max_nr_udc = gv_nr_udc;
-			}
+				if (gv_nr_udc > gv_max_nr_udc)
+				{
+					gv_max_nr_udc = gv_nr_udc;
+				}
 
-			if (lv_mem > gv_mem)
-			{
-				gv_mem = lv_mem;	// Increase global memory requirement.
+				if (lv_mem > gv_mem)
+				{
+					gv_mem = lv_mem;	// Increase global memory requirement.
+				}
+				for (l = 0; l < la_ptg_act[0]; l++)
+					delete	lm_lnk_mem_sp[l];
+				for (l = 0; l < gm_nio_ptg[i][j][0]; l++)
+				{
+					delete lm_lnk_mem[l];
+				}
+				delete lm_lnk_mem;
+				delete la_lnk_nra;
+				delete la_lnk_fin;
+				delete la_act_sta;
+				delete lm_lnk_mem_sp;
+				//DELETE THIS IF YOU WANT ALL DATA!!!
+			   //if(static_cast<float>(static_cast<double>(8*gv_mem)/static_cast<double>(ga_bin[20]))>gv_max_mem)
+			   //{
+			   //	gv_opt=0;
+			   //	j=ga_ptg[i];	// EXIT LOOP.
+			   //	i=1;
+			   //}
 			}
-			for (l = 0; l < la_ptg_act[0]; l++)
-				delete	lm_lnk_mem_sp[l];
-			for (l = 0; l < gm_nio_ptg[i][j][0]; l++)
-			{
-				delete lm_lnk_mem[l];
-			}
-			delete lm_lnk_mem;
-			delete la_lnk_nra;
-			delete la_lnk_fin;
-			delete la_act_sta;
-			delete lm_lnk_mem_sp;
-			//DELETE THIS IF YOU WANT ALL DATA!!!
-		   //if(static_cast<float>(static_cast<double>(8*gv_mem)/static_cast<double>(ga_bin[20]))>gv_max_mem)
-		   //{
-		   //	gv_opt=0;
-		   //	j=ga_ptg[i];	// EXIT LOOP.
-		   //	i=1;
-		   //}
 		}
 	}
-
 	//////////////////////////////////////////////////////////////////////////
 	///////////DESTRUCTION PHASE//////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -433,21 +432,7 @@ unsigned long int f_mem(void)
 	///////////DEFINE NPV COMPUTATION OPTION//////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	if (static_cast<float>(static_cast<double>(8 * gv_mem) / static_cast<double>(ga_bin[20])) > gv_max_mem)
-	{
-		gv_opt = 0;
-	}
-	else
-	{
-		//if(static_cast<float>(static_cast<double>(8*gv_mem)/static_cast<double>(ga_bin[20]))>=1700)	// ONLY DO THIS IF MORE THAN 1700 MEM IS AVAILABLE
-		//{
-		gv_opt = 1;
-		//}
-		//else
-		//{
-		//	gv_opt=0;
-		//}
-	}
+	gv_opt = !(static_cast<float>(static_cast<double>(8 * gv_mem) / static_cast<double>(ga_bin[20])) > gv_max_mem);
 
 	return gv_opt;	// Return the chosen option to the main program.
 }

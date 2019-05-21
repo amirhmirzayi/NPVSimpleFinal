@@ -59,7 +59,7 @@ double				gv_avg_mpa;				// Global variable holding the average number of parall
 double				gv_avg_udc;				// Global variable holding the average number of UDCs per state.
 float				gv_npv;					// Global variable holding the outcome npv.
 int					gv_max_mem;				// Global variable holding the maximum available memory.
-unsigned long int	gv_opt;					// Global variable holding the memory option.
+bool	gv_opt;					// Global variable holding the memory option.
 unsigned short int	gv_reg;					// Global variable holding the number of regular actions.
 unsigned short int	gv_mrg;					// Global variable holding the number of merged actions.
 unsigned short int	gv_double;				// Global variable holding the number of double outgoing links.

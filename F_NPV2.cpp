@@ -43,7 +43,6 @@ void f_npv2(void)
 //	void f_rid_ptg_act(unsigned short int i, unsigned short int j, unsigned short int *la_ptg_act, unsigned short int *la_ptg_act_inv, unsigned short int *la_lnk_nra, bool **lm_lnk_mem);	// Retrieve and identify ptg activities.
 	void f_ter2(unsigned short int i, unsigned short int j, unsigned long int**** lm_ter_str, float**** lm_npv_str);
 	double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_idl, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Returns the NPV corresponding to the optimal decision.
-	bool parallel_f_dec(float* f, unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_idl, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str);
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZATION/////////////////////////////////////////////////
