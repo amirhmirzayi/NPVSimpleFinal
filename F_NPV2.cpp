@@ -1,3 +1,4 @@
+#include "F_NPV2.h"
 
 void f_npv2(void)
 {
@@ -8,34 +9,9 @@ void f_npv2(void)
 	float**** lm_npv_str;		// Local matrix holding the npv values of all combinations.
 	unsigned long int**** lm_ter_str;		// Local matrix tertiary structure holding the unique code of each combination required to sort them.
 
-	unsigned long int** lm_bin_lnk;			// Local matrix holding for each link the binary value of the activities required to finish.
-	unsigned short int** lm_lnk_act;			// Local matrix holding all member activities of linked to ptgs.
-	bool** lm_lib_act_lst;		// Local matrix holding a list of all liberated activities in each linked to ptg.
-	bool** lm_lnk_mem;			// Local matrix link membership. Is activity i a member of link l or not.
 
-	unsigned long int* la_bin_fin;			// Local array binary values of finished activities. Holds the binary equivalent of values finished.
-	unsigned long int* la_bin_idl;			// Local array binary code of idle activities. Holds the binary equivalent of values that have not yet been started.
-	unsigned long int* la_bin_bus;			// Local array binary code of busy activities. Holds the binary equivalent of values that have been started, but that yet have to finish.
-	unsigned long int* la_fnd_cod;			// Local array find code. Holds 16-bits of binary code.
-	unsigned short int* la_ptg_act;			// Local array ptg activity. Which activities are a member of the ptg in question.
-	unsigned short int* la_ptg_act_inv;		// Local array ptg activity inverse. The inverse relationship of la_ptg_act.
-	unsigned short int* la_lnk_nra;			// Local array link number of activities. Holds the number of shared activities between a ptg and the linked ptg.
-	unsigned short int* la_lnk_fin;			// Local array link finish. Indicates if a link is established (just a copy of la_lnk_nra).
-	unsigned short int* la_act_sta;			// Local array activity status.
 
-	unsigned long int	lv_tot_nrc;				// Local variable total number of combinations.
-	unsigned short int	lv_nr32;				// Local variable which holds the number of 32-bits arrays required.
-	unsigned short int	lv_nr16;				// Local variable which holds the number of 16-bits arrays required.
 
-	unsigned short int	i;	// Simple counter.
-	unsigned short int	j;	// Simple counter.
-	unsigned short int	k;	// Simple counter.
-	unsigned short int	l;	// Simple counter.
-	unsigned short int	m;	// Simple counter.
-
-	unsigned long int	z2;
-	unsigned short int	z1;
-	bool				z0;
 	//////////////////////////////////////////////////////////////////////////
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -50,18 +26,13 @@ void f_npv2(void)
 
 	lm_npv_str = new float*** [gv_n];
 	lm_ter_str = new unsigned long int*** [gv_n];
-	for (i = (gv_n - 2); i > 0; i--)
+	for (unsigned short int i = (gv_n - 2); i > 0; i--)
 	{
 		lm_npv_str[i] = new float** [ga_ptg[i]];
 		lm_ter_str[i] = new unsigned long int** [ga_ptg[i]];
 	}
 
-	la_bin_fin = new unsigned long int[gv_bnr];
-	la_bin_idl = new unsigned long int[gv_bnr];
-	la_bin_bus = new unsigned long int[gv_bnr];
-	la_fnd_cod = new unsigned long int[gv_bnr];
-	la_ptg_act = new unsigned short int[gv_n];
-	la_ptg_act_inv = new unsigned short int[gv_n];
+
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZE FIRST AND LAST NODE/////////////////////////////////
@@ -84,10 +55,10 @@ void f_npv2(void)
 
 	printf("[%d,%d", gv_n, (gv_n - 1));
 
-	for (i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
+	for (unsigned short int i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
 	{
 		printf(",%d", i);
-		for (j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
+		for (unsigned short int j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
 		{
 
 			//////////////////////////////////////////////////////////////////////////
@@ -100,8 +71,32 @@ void f_npv2(void)
 		///////INITIALIZATION/////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////
 
-			lm_lnk_mem = new bool* [gm_nio_ptg[i][j][0]];	// Defines if an activity is a member of an outgoing link (there are gm_nio_ptg[i][j][0] outgoing links at this ptg).
+			bool** lm_lnk_mem = lm_lnk_mem = new bool* [gm_nio_ptg[i][j][0]];	// Defines if an activity is a member of an outgoing link (there are gm_nio_ptg[i][j][0] outgoing links at this ptg).
+			unsigned short int* la_lnk_nra;			// Local array link number of activities. Holds the number of shared activities between a ptg and the linked ptg.
 			la_lnk_nra = new unsigned short int[gm_nio_ptg[i][j][0]];	// Create number of activities array (for each outgoing link).
+
+			unsigned long int* la_bin_fin;			// Local array binary values of finished activities. Holds the binary equivalent of values finished.
+			unsigned long int* la_bin_idl;			// Local array binary code of idle activities. Holds the binary equivalent of values that have not yet been started.
+			unsigned long int* la_bin_bus;			// Local array binary code of busy activities. Holds the binary equivalent of values that have been started, but that yet have to finish.
+			unsigned short int* la_ptg_act;			// Local array ptg activity. Which activities are a member of the ptg in question.
+			unsigned short int* la_ptg_act_inv;		// Local array ptg activity inverse. The inverse relationship of la_ptg_act.
+			unsigned long int* la_fnd_cod;			// Local array find code. Holds 16-bits of binary code.
+			unsigned short int	lv_nr32;				// Local variable which holds the number of 32-bits arrays required.
+			unsigned short int	lv_nr16;				// Local variable which holds the number of 16-bits arrays required.
+
+			unsigned short int	k;	// Simple counter.
+			unsigned short int	l;	// Simple counter.
+			unsigned short int	m;	// Simple counter.
+
+			unsigned long int	z2;
+			unsigned short int	z1;
+			bool				z0;
+			la_bin_fin = new unsigned long int[gv_bnr];
+			la_bin_idl = new unsigned long int[gv_bnr];
+			la_bin_bus = new unsigned long int[gv_bnr];
+			la_fnd_cod = new unsigned long int[gv_bnr];
+			la_ptg_act = new unsigned short int[gv_n];
+			la_ptg_act_inv = new unsigned short int[gv_n];
 			for (k = 0; k < gv_bnr; k++)
 			{
 				la_bin_fin[k] = 0;	//la_bin_fin we need to evaluate whether a link has been established (to know in which matrix of npvs we will have to look; temporary combination npv matrix (and which) or permanent combination npv matrix).
@@ -122,6 +117,7 @@ void f_npv2(void)
 			//////////////////////////////////////////////////////////////////
 			///OBTAIN LINK ESTABLISHING ACTIVITIES////////////////////////////
 			//////////////////////////////////////////////////////////////////
+			unsigned long int** lm_bin_lnk;			// Local matrix holding for each link the binary value of the activities required to finish.
 
 			lm_bin_lnk = new unsigned long int* [gv_bnr];
 			for (k = 0; k < gv_bnr; k++)
@@ -136,6 +132,7 @@ void f_npv2(void)
 			//////////////////////////////////////////////////////////////////
 			///IDENTIFY LINK MEMBER ACTIVITIES AND LIBERATED ACTIVITIES///////
 			//////////////////////////////////////////////////////////////////
+			unsigned short int** lm_lnk_act;			// Local matrix holding all member activities of linked to ptgs.
 
 			lm_lnk_act = new unsigned short int* [gm_nio_ptg[i][j][0]];
 
@@ -167,6 +164,7 @@ void f_npv2(void)
 					}
 				}
 			}
+			bool** lm_lib_act_lst;		// Local matrix holding a list of all liberated activities in each linked to ptg.
 
 			lm_lib_act_lst = new bool* [gm_nio_ptg[i][j][0]];
 
@@ -191,14 +189,18 @@ void f_npv2(void)
 			//////////////////////////////////////////////////////////////////
 			///INITIALIZATION OF ACTIVITY STATUS//////////////////////////////
 			//////////////////////////////////////////////////////////////////
+			unsigned short int* la_lnk_fin;			// Local array link finish. Indicates if a link is established (just a copy of la_lnk_nra).
 
 			la_lnk_fin = new unsigned short int[gm_nio_ptg[i][j][0]];
 			for (l = 0; l < gm_nio_ptg[i][j][0]; l++)	// Check all links moving from this ptg.
 			{
 				la_lnk_fin[l] = la_lnk_nra[l];	// As long as la_lnk_fin is larger than 1; there is still a member activity of link l that may be finished (without establishing link l).
 			}
+			unsigned short int* la_act_sta;			// Local array activity status.
 			la_act_sta = new unsigned short int[la_ptg_act[0]];	// The dimension of la_act_sta is determined by the number of activities in this ptg.
 			m = la_ptg_act[0];
+			unsigned long int	lv_tot_nrc;				// Local variable total number of combinations.
+
 			lv_tot_nrc = 0;	// Initialize the total number of combinations for this ptg.
 			lv_nr16 = static_cast<int>(floor(static_cast<double>(lv_tot_nrc) / static_cast<double>(ga_bin_min[16])));
 			do
@@ -393,7 +395,12 @@ void f_npv2(void)
 			delete la_lnk_nra;
 			delete la_lnk_fin;
 			delete la_act_sta;
-
+			delete la_bin_fin;
+			delete la_bin_idl;
+			delete la_bin_bus;
+			delete la_fnd_cod;
+			delete la_ptg_act;
+			delete la_ptg_act_inv;
 			//////////////////////////////////////////////////////////////////////
 			///////BUG DETECTION//////////////////////////////////////////////////
 			//////////////////////////////////////////////////////////////////////
@@ -405,6 +412,7 @@ void f_npv2(void)
 			}
 		}
 	}
+	unsigned short int	lv_nr16;				// Local variable which holds the number of 16-bits arrays required.
 
 	lv_nr16 = static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[1][0]) / static_cast<double>(ga_bin_min[16])));
 
@@ -417,7 +425,7 @@ void f_npv2(void)
 	//////////////////////////////////////////////////////////////////////////
 
 	lv_nr16 = static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[gm_dpt_ptg[1][0][0]][gm_lnk_ptg[1][0][0]]) / static_cast<double>(ga_bin_min[16])));
-	for (i = (gv_n - 2); i > 0; i--)
+	for (unsigned short int i = (gv_n - 2); i > 0; i--)
 	{
 		delete lm_npv_str[i];
 		delete lm_ter_str[i];
@@ -428,12 +436,7 @@ void f_npv2(void)
 	delete lm_ter_str[(gv_n - 1)];
 	delete lm_ter_str;
 
-	delete la_bin_fin;
-	delete la_bin_idl;
-	delete la_bin_bus;
-	delete la_fnd_cod;
-	delete la_ptg_act;
-	delete la_ptg_act_inv;
+
 }
 
 double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_idl, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str)	// Create all decisions given a set of idle activities.
@@ -463,7 +466,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	//////////////////////////////////////////////////////////////////////////
 	double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Given a decision, computes the npv
 	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZATION/////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
@@ -580,7 +583,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 		if (la_idl_act[0] > 1)	// Multiple idle activities are available for starting.
 		{
-		do
+			do
 			{
 				do	// Expand.
 				{
@@ -596,7 +599,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 					//--> WRITE AWAY DECISION.
-					lv_tmp_npv = f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str)+ lv_costs;
+					lv_tmp_npv = f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str) + lv_costs;
 					if (lv_max_npv < lv_tmp_npv)
 					{
 						lv_max_npv = lv_tmp_npv;	// Maximize npv.
@@ -638,7 +641,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 					//--> WRITE AWAY DECISION.
 
-					lv_tmp_npv =  f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str)+ lv_costs;
+					lv_tmp_npv = f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str) + lv_costs;
 					if (lv_max_npv < lv_tmp_npv)
 					{
 						lv_max_npv = lv_tmp_npv;	// Maximize npv.

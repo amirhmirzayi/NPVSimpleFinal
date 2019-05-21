@@ -150,7 +150,7 @@ bool f_mem(void)
 	gm_ptg_nrc[0] = new unsigned long int[1];
 	gm_ptg_nrc[0][0] = 0;	// At the first node, there are no combinations.
 
-	
+
 
 	gv_avg_mem = 0;
 	gv_avg_mpa = 0;
@@ -172,18 +172,18 @@ bool f_mem(void)
 	//////////////////////////////////////////////////////////////////////////
 
 	{
-		
+#pragma omp for ordered schedule(static)
 		for (unsigned short int i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
 		{
 
 			//////////////////////////////////////////////////////////////////////
 			///////INITIALIZATION/////////////////////////////////////////////////
 			//////////////////////////////////////////////////////////////////////
-		
+
 			for (unsigned short int j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
 			{
-				
-			
+
+
 				unsigned short int	l;	// Simple counter.
 				unsigned short int	m;	// Simple counter.
 				unsigned short int	cn;
@@ -192,8 +192,8 @@ bool f_mem(void)
 				//////////////////////////////////////////////////////////////////////
 
 				gm_ptg_nrc[i][j] = 0;
-				bool** lm_lnk_mem=lm_lnk_mem = new bool* [gm_nio_ptg[i][j][0]];	// Defines if an activity is a member of an outgoing link (there are gm_nio_ptg[i][j][0] outgoing links at this ptg).
-				unsigned short int* la_lnk_nra= new unsigned short int[gm_nio_ptg[i][j][0]];	// Create number of activities array (for each outgoing link).
+				bool** lm_lnk_mem = lm_lnk_mem = new bool* [gm_nio_ptg[i][j][0]];	// Defines if an activity is a member of an outgoing link (there are gm_nio_ptg[i][j][0] outgoing links at this ptg).
+				unsigned short int* la_lnk_nra = new unsigned short int[gm_nio_ptg[i][j][0]];	// Create number of activities array (for each outgoing link).
 
 			//////////////////////////////////////////////////////////////////////
 			///////FUNCTIONS AND PROGRAM//////////////////////////////////////////
@@ -209,8 +209,8 @@ bool f_mem(void)
 				la_ptg_act = new unsigned short int[gv_n];
 				la_ptg_act_inv = new unsigned short int[gv_n];
 				f_rid_ptg_act(i, j, la_ptg_act, la_ptg_act_inv, la_lnk_nra, lm_lnk_mem);	// Retrieve and identify ptg activities.
-				
-				unsigned short int** lm_lnk_mem_sp= new unsigned short int* [la_ptg_act[0]];
+
+				unsigned short int** lm_lnk_mem_sp = new unsigned short int* [la_ptg_act[0]];
 				unsigned short int* tmp;
 				for (m = 0; m < la_ptg_act[0]; m++)	// Check all activities in this ptg.
 				{
@@ -330,7 +330,7 @@ bool f_mem(void)
 						do
 						{
 							m++;	// Increase the position. Minimal position (value 0) will be maximized.
-							bool z1 =false;	// Indicates if finishing activity la_ptg_act[m+1] would establish an unwanted link.
+							bool z1 = false;	// Indicates if finishing activity la_ptg_act[m+1] would establish an unwanted link.
 							for (l = 1; l < lm_lnk_mem_sp[m][0]; l++)	// Check all links.
 							{
 								if (la_lnk_fin[lm_lnk_mem_sp[m][l]] == 1)
@@ -352,48 +352,51 @@ bool f_mem(void)
 						} while (m < la_ptg_act[0] - 1);	// Do until you arrive at the last activity.
 					}
 				} while (true);	// Repeat reverse shrink-expand procedure until all combinations have been found.
-
-
-				// Record the maximum number of parallel activities.
-				if (la_ptg_act[0] > gv_mpa)
+#pragma omp ordered
 				{
-					gv_mpa = la_ptg_act[0];
-				}
-				// Record average number of parallel activities per udc.
-				gv_avg_mpa += la_ptg_act[0];
-				gv_tot_nrc += gm_ptg_nrc[i][j];	// Keep track of the total number of combinations.
-				//////////////////////////////////////////////////////////////////////
-				///////DESTRUCTION PHASE PRIOR TO MOVING TO THE NEXT PTG//////////////
-				//////////////////////////////////////////////////////////////////////
-
-				lv_mem += gm_ptg_nrc[i][j];	// Increase memory requirement.
-				gv_nr_udc++;
-
-				for (l = 0; l < gm_nio_ptg2[i][j][0]; l++)	// Check all outgoing links.
-				{
-					if (gm_nio_ptg2[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1] == 1)	// Is the incoming link at its minimum?
+					// Record the maximum number of parallel activities.
+					if (la_ptg_act[0] > gv_mpa)
 					{
-						lv_mem -= gm_ptg_nrc[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]];
-						gv_nr_udc--;
+						gv_mpa = la_ptg_act[0];
 					}
-					else	// The incoming link is not yet at its minimum. Decrease gm_nio_ptg2. Memory is still required.
+					// Record average number of parallel activities per udc.
+					gv_avg_mpa += la_ptg_act[0];
+					gv_tot_nrc += gm_ptg_nrc[i][j];	// Keep track of the total number of combinations.
+					//////////////////////////////////////////////////////////////////////
+					///////DESTRUCTION PHASE PRIOR TO MOVING TO THE NEXT PTG//////////////
+					//////////////////////////////////////////////////////////////////////
+
+					lv_mem += gm_ptg_nrc[i][j];	// Increase memory requirement.
+					gv_nr_udc++;
+
+					for (l = 0; l < gm_nio_ptg2[i][j][0]; l++)	// Check all outgoing links.
 					{
-						gm_nio_ptg2[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1]--;
+						if (gm_nio_ptg2[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1] == 1)	// Is the incoming link at its minimum?
+						{
+							lv_mem -= gm_ptg_nrc[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]];
+							gv_nr_udc--;
+						}
+						else	// The incoming link is not yet at its minimum. Decrease gm_nio_ptg2. Memory is still required.
+						{
+							gm_nio_ptg2[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1]--;
+						}
 					}
+
+					gv_avg_mem += (gm_ptg_nrc[i][j] * lv_mem);	// Indicate that gm_ptg_nrc[i][j] combinations (i.e. states) require lv_mem memory requirements.
+					gv_avg_udc += (gm_ptg_nrc[i][j] * gv_nr_udc);	// Indicate that gm_ptg_nrc[i][j] combinations (i.e. states) require lv_mem udcs in memory.
+
+					if (gv_nr_udc > gv_max_nr_udc)
+					{
+						gv_max_nr_udc = gv_nr_udc;
+					}
+
+					if (lv_mem > gv_mem)
+					{
+						gv_mem = lv_mem;	// Increase global memory requirement.
+					}
+
 				}
 
-				gv_avg_mem += (gm_ptg_nrc[i][j] * lv_mem);	// Indicate that gm_ptg_nrc[i][j] combinations (i.e. states) require lv_mem memory requirements.
-				gv_avg_udc += (gm_ptg_nrc[i][j] * gv_nr_udc);	// Indicate that gm_ptg_nrc[i][j] combinations (i.e. states) require lv_mem udcs in memory.
-
-				if (gv_nr_udc > gv_max_nr_udc)
-				{
-					gv_max_nr_udc = gv_nr_udc;
-				}
-
-				if (lv_mem > gv_mem)
-				{
-					gv_mem = lv_mem;	// Increase global memory requirement.
-				}
 				for (l = 0; l < la_ptg_act[0]; l++)
 					delete	lm_lnk_mem_sp[l];
 				for (l = 0; l < gm_nio_ptg[i][j][0]; l++)
@@ -423,7 +426,7 @@ bool f_mem(void)
 
 	for (unsigned short int i = 0; i < gv_n; i++)
 	{
-		for (unsigned short int  j = 0; j < ga_ptg[i]; j++)
+		for (unsigned short int j = 0; j < ga_ptg[i]; j++)
 		{
 			delete gm_nio_ptg2[i][j];
 		}
@@ -431,7 +434,7 @@ bool f_mem(void)
 	}
 	delete gm_nio_ptg2;
 
-	
+
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////DEFINE NPV COMPUTATION OPTION//////////////////////////////////
