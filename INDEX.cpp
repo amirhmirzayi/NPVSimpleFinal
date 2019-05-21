@@ -10,7 +10,7 @@
 //////////////////////////////////////////////////////////////////////////////
 ///////////////INCLUDES///////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-#include <set>
+
 #include <stdio.h>
 #include <stdlib.h>					// Math library.
 #include <math.h>					// Another math library.
@@ -18,6 +18,7 @@
 #include <iostream>					// Input output.
 #include <fstream>					// Input output.
 #include <omp.h>
+#include <cassert>
 using namespace std;				// Input output.
 
 //////////////////////////////////////////////////////////////////////////////
@@ -90,7 +91,7 @@ void	f_kil(void);	// Destroy data structures no longer required before advancing
 
 void main()
 {
-
+	
 	// Initialize counter.
 	unsigned short int	i;
 
@@ -106,8 +107,8 @@ void main()
 	// Get the maximum amount of available memory.
 	printf("Please indicate the maximum of system memory (in MB) available for processing:");
 	printf("\n");
-	//scanf_s("%d", &gv_max_mem);
-	gv_max_mem =500;
+	scanf_s("%d", &gv_max_mem);
+	//gv_max_mem =500;
 	printf("\n");
 
 	// Run the program.

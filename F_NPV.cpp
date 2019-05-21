@@ -170,7 +170,7 @@ bool f_mem(void)
 	//////////////////////////////////////////////////////////////////////////
 	///////////DETERMINE MEMORY REQUIREMENT///////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
-
+#pragma omp parallel
 	{
 #pragma omp for ordered schedule(static)
 		for (unsigned short int i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).

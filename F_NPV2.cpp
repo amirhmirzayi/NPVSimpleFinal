@@ -1,3 +1,4 @@
+
 void f_npv2(void)
 {
 	//////////////////////////////////////////////////////////////////////////
@@ -49,22 +50,21 @@ void f_npv2(void)
 	//////////////////////////////////////////////////////////////////////////
 	///////////DETERMINE NPV AND LOOKUP STRUCTURE/////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
-
-
+  
+	
 	printf("[%d,%d", gv_n, (gv_n - 1));
-
+	
+	
 	for (unsigned short int i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
 	{
 		printf(",%d", i);
+
+#pragma omp parallel for   schedule(dynamic)
 		for (unsigned short int j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
 		{
-
-			//////////////////////////////////////////////////////////////////////////
-			///////////CREATE TERTIARY STRUCTURE FUNCTION/////////////////////////////
-			//////////////////////////////////////////////////////////////////////////
-
-			f_ter2(i, j, lm_ter_str, lm_npv_str);		// Construct tertiary structure.
-
+			f_ter2(i, j, lm_ter_str, lm_npv_str);
+				
+			
 		//////////////////////////////////////////////////////////////////////
 		///////INITIALIZATION/////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////
@@ -358,6 +358,7 @@ void f_npv2(void)
 
 			for (l = 0; l < gm_nio_ptg[i][j][0]; l++)	// Check all outgoing links.
 			{
+				
 				if (gm_nio_ptg[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1] == 1)
 				{
 					lv_nr16 = static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]]) / static_cast<double>(ga_bin_min[16])));
@@ -374,6 +375,7 @@ void f_npv2(void)
 				{
 					gm_nio_ptg[gm_dpt_ptg[i][j][l]][gm_lnk_ptg[i][j][l]][1]--;
 				}
+				
 			}
 
 			for (k = 0; k < gv_bnr; k++)
@@ -410,6 +412,8 @@ void f_npv2(void)
 			}
 		}
 	}
+
+	
 	unsigned short int	lv_nr16;				// Local variable which holds the number of 16-bits arrays required.
 
 	lv_nr16 = static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[1][0]) / static_cast<double>(ga_bin_min[16])));
@@ -422,7 +426,7 @@ void f_npv2(void)
 	///////////DESTRUCTION PHASE//////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	lv_nr16 = static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[gm_dpt_ptg[1][0][0]][gm_lnk_ptg[1][0][0]]) / static_cast<double>(ga_bin_min[16])));
+	//lv_nr16 = static_cast<int>(floor(static_cast<double>(gm_ptg_nrc[gm_dpt_ptg[1][0][0]][gm_lnk_ptg[1][0][0]]) / static_cast<double>(ga_bin_min[16])));
 	for (unsigned short int i = (gv_n - 2); i > 0; i--)
 	{
 		delete lm_npv_str[i];
@@ -463,7 +467,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 	double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_act_sta, unsigned short int* la_ptg_act, unsigned short int* la_ptg_act_inv, unsigned long int* la_bin_fin, unsigned long int* la_bin_bus, bool** lm_lib_act_lst, unsigned short int** lm_lnk_act, unsigned long int** lm_bin_lnk, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Given a decision, computes the npv
-	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
+	double f_fnd( unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int** lm_ter_str, float** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZATION/////////////////////////////////////////////////
@@ -479,7 +483,6 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 	///////////DO NOT START ADDITIONAL ACTIVITIES/////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-//#pragma omp parallel for
 	for (k = 0; k < gv_bnr; k++)
 	{
 		if (la_bin_bus[k] > 0)
@@ -568,7 +571,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 
 
-		lv_tmp_npv = (lv_costs + f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));
+		lv_tmp_npv = (lv_costs + f_fnd(lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str[i][j], lm_npv_str[i][j]));
 		if (lv_max_npv < lv_tmp_npv)
 		{
 			lv_max_npv = lv_tmp_npv;	// Maximize npv.
@@ -597,7 +600,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[la_ptg_act_inv[la_idl_act[(la_sub_pos[m] + 1)]]]);
 					//--> WRITE AWAY DECISION.
-					lv_tmp_npv = f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str) + lv_costs;
+					lv_tmp_npv = f_fnd( lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str[i][j], lm_npv_str[i][j]) + lv_costs;
 					if (lv_max_npv < lv_tmp_npv)
 					{
 						lv_max_npv = lv_tmp_npv;	// Maximize npv.
@@ -639,7 +642,7 @@ double f_dec(unsigned short int i, unsigned short int j, unsigned short int* la_
 
 					//--> WRITE AWAY DECISION.
 
-					lv_tmp_npv = f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str) + lv_costs;
+					lv_tmp_npv = f_fnd(lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str[i][j], lm_npv_str[i][j]) + lv_costs;
 					if (lv_max_npv < lv_tmp_npv)
 					{
 						lv_max_npv = lv_tmp_npv;	// Maximize npv.
@@ -704,7 +707,7 @@ double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_
 	///////////PROTOTYPE FUNCTIONS////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
+	double f_fnd( unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int** lm_ter_str, float** lm_npv_str);	// Finds the npv value corresponding to a tertiary value.
 
 	//////////////////////////////////////////////////////////////////////////
 	///////////INITIALIZATION/////////////////////////////////////////////////
@@ -846,7 +849,10 @@ double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_
 					}
 				}
 			}
-			lv_tmp_npv += (lv_prob * lv_factor * f_fnd(gm_dpt_ptg[i][j][lv_lnk], gm_lnk_ptg[i][j][lv_lnk], lv_tmp_ter, gm_ptg_nrc[gm_dpt_ptg[i][j][lv_lnk]][gm_lnk_ptg[i][j][lv_lnk]], lm_ter_str, lm_npv_str));	// Find the npv value corresponding to this tertiary value.
+		
+			lv_tmp_npv += (lv_prob * lv_factor * f_fnd( lv_tmp_ter, gm_ptg_nrc[gm_dpt_ptg[i][j][lv_lnk]][gm_lnk_ptg[i][j][lv_lnk]],
+				lm_ter_str[gm_dpt_ptg[i][j][lv_lnk]][gm_lnk_ptg[i][j][lv_lnk]], lm_npv_str[gm_dpt_ptg[i][j][lv_lnk]][gm_lnk_ptg[i][j][lv_lnk]]));	// Find the npv value corresponding to this tertiary value.
+		
 		}
 		else	// No link has been established.
 		{
@@ -862,7 +868,7 @@ double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_
 					lv_tmp_ter += static_cast<unsigned long int>(ga_bin3[n]);
 				}
 			}
-			lv_tmp_npv += (lv_prob * lv_factor * f_fnd(i, j, lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str, lm_npv_str));	// Find the npv value corresponding to this tertiary value.
+			lv_tmp_npv += (lv_prob * lv_factor * f_fnd(lv_tmp_ter, gm_ptg_nrc[i][j], lm_ter_str[i][j], lm_npv_str[i][j]));	// Find the npv value corresponding to this tertiary value.
 		}
 
 		//		if(la_act_sta[la_ptg_act_inv[la_bus_act[m+1]]]==0){printf("Error15");throw"Error";}
@@ -884,7 +890,7 @@ double f_npv(unsigned short int i, unsigned short int j, unsigned short int* la_
 	return lv_tmp_npv;
 }
 
-double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int**** lm_ter_str, float**** lm_npv_str)	// Find the npv value corresponding to the tertiary value. i and j indicate the recursion depth and ptg identification.
+double f_fnd( unsigned long int lv_tmp_ter, unsigned long gm_ptg_nrc_ij, unsigned long int** lm_ter_str, float** lm_npv_str)	// Find the npv value corresponding to the tertiary value. i and j indicate the recursion depth and ptg identification.
 {
 	//////////////////////////////////////////////////////////////////////////
 	///////////DEFINE LOCAL VARIABLES/////////////////////////////////////////
@@ -905,7 +911,8 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 	double ga_bin_min_16 = ga_bin_min[16];
 	double floar_lv_nr16_cut = floor(static_cast<double>(gm_ptg_nrc_ij) / static_cast<double>(ga_bin_min_16));
 	lv_nr16_cut = static_cast<unsigned short int>(floar_lv_nr16_cut);
-	while (lm_ter_str[i][j][lv_nr16_cut][0] < lv_tmp_ter)	// Increase lv_nr16_cut until you arrive at the correct block of the tertiary structure (position 0 holds the highest value).
+
+	while (lm_ter_str[lv_nr16_cut][0] < lv_tmp_ter)	// Increase lv_nr16_cut until you arrive at the correct block of the tertiary structure (position 0 holds the highest value).
 	{
 		lv_nr16_cut--;
 	}
@@ -934,7 +941,7 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 		}
 		// Reset the value of lv_nr16_cut.
 		lv_nr16_cut = static_cast<unsigned short int>(floar_lv_nr16_cut);
-		while (lm_ter_str[i][j][lv_nr16_cut][0] < lv_tmp_ter)	// Increase lv_nr16_cut until you arrive at the correct block of the tertiary structure (position 0 holds the highest value).
+		while (lm_ter_str[lv_nr16_cut][0] < lv_tmp_ter)	// Increase lv_nr16_cut until you arrive at the correct block of the tertiary structure (position 0 holds the highest value).
 		{
 			lv_nr16_cut--;
 		}
@@ -951,7 +958,7 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 	{
 
 		z2 = static_cast<unsigned long int>(lv_cut_lower + (lv_cut % 2 + lv_cut / 2));//z2=static_cast<unsigned long int>(lv_cut_lower+ceil(static_cast<double>(lv_cut)/static_cast<double>(2)));
-		if (lv_tmp_ter >= lm_ter_str[i][j][lv_nr16_cut][z2])	// The tertiary value is larger, so it belongs to the first half.
+		if (lv_tmp_ter >= lm_ter_str[lv_nr16_cut][z2])	// The tertiary value is larger, so it belongs to the first half.
 		{
 			lv_cut_upper = z2;
 		}
@@ -961,11 +968,11 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 		}
 		lv_cut = lv_cut_upper - lv_cut_lower;
 	}
-	if (lm_ter_str[i][j][lv_nr16_cut][lv_cut_lower] == lv_tmp_ter)
+	if (lm_ter_str[lv_nr16_cut][lv_cut_lower] == lv_tmp_ter)
 	{
 		lv_cut_upper = lv_cut_lower;
 	}
-	else if (lm_ter_str[i][j][lv_nr16_cut][lv_cut_upper] != lv_tmp_ter)
+	else if (lm_ter_str[lv_nr16_cut][lv_cut_upper] != lv_tmp_ter)
 	{
 		if (lv_cut_upper != lv_cut_lower)
 		{
@@ -978,7 +985,7 @@ double f_fnd(unsigned short int i, unsigned short int j, unsigned long int lv_tm
 	///////////RETURN CORRESPONDING NPV VALUE/////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 
-	return lm_npv_str[i][j][lv_nr16_cut][lv_cut_upper];	// Return the corresponding NPV value.
+	return lm_npv_str[lv_nr16_cut][lv_cut_upper];	// Return the corresponding NPV value.
 }
 
 void f_ter2(unsigned short int i, unsigned short int j, unsigned long int**** lm_ter_str, float**** lm_npv_str)		// Construct tertiary structure.
