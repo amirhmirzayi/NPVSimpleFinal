@@ -353,6 +353,7 @@ bool f_mem(void)
 					}
 				} while (true);	// Repeat reverse shrink-expand procedure until all combinations have been found.
 
+
 				// Record the maximum number of parallel activities.
 				if (la_ptg_act[0] > gv_mpa)
 				{
