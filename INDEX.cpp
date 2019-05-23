@@ -59,6 +59,7 @@ double				gv_avg_mem;				// Global variable holding the average memory requireme
 double				gv_avg_mpa;				// Global variable holding the average number of parallel activities over all UDCs.
 double				gv_avg_udc;				// Global variable holding the average number of UDCs per state.
 float				gv_npv;					// Global variable holding the outcome npv.
+int				    gv_core;				// Global variable holding the number of threads in the program per state.
 int					gv_max_mem;				// Global variable holding the maximum available memory.
 bool	gv_opt;					// Global variable holding the memory option.
 unsigned short int	gv_reg;					// Global variable holding the number of regular actions.
@@ -103,7 +104,12 @@ void main()
 
 	// Get gm_bin_act_cod.
 	f_bin();
-
+	
+	printf("Please indicate number of threads in the program using:");
+	printf("\n");
+	scanf_s("%d", &gv_core);
+	omp_set_dynamic(0);     // Explicitly disable dynamic teams
+	omp_set_num_threads(gv_core); // Use 4 threads for all consecutive parallel regions
 	// Get the maximum amount of available memory.
 	printf("Please indicate the maximum of system memory (in MB) available for processing:");
 	printf("\n");
