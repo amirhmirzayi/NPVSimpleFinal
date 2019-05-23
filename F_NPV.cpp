@@ -172,14 +172,14 @@ bool f_mem(void)
 	//////////////////////////////////////////////////////////////////////////
 #pragma omp parallel
 	{
-#pragma omp for ordered schedule(static)
+
 		for (unsigned short int i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
 		{
 
 			//////////////////////////////////////////////////////////////////////
 			///////INITIALIZATION/////////////////////////////////////////////////
 			//////////////////////////////////////////////////////////////////////
-
+#pragma omp for ordered schedule(dynamic)
 			for (unsigned short int j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
 			{
 
