@@ -54,12 +54,13 @@ void f_npv2(void)
 	
 	printf("[%d,%d", gv_n, (gv_n - 1));
 	
-	
+#pragma omp parallel
 	for (unsigned short int i = (gv_n - 2); i > 0; i--)	// Starting from the second highest recursion level, check all recursion levels (except for the first and final node; the latter one is initialized seperately).
 	{
-		printf(",%d", i);
+#pragma omp single
+		{printf(",%d", i); }
 
-#pragma omp parallel for   schedule(dynamic)
+#pragma omp  for   schedule(dynamic)
 		for (unsigned short int j = 0; j < ga_ptg[i]; j++)	// Check all ptgs at recursion level i.
 		{
 			f_ter2(i, j, lm_ter_str, lm_npv_str);

@@ -65,7 +65,7 @@ void f_store(void)
 	if (ga_batch[1] == 1)	// Print Header.
 	{
 		ofstream Results("Results.csv", ios::trunc);
-		Results << "N , INSTANCE , # UDC , # COMBINATIONS , # OUTGOING LINKS , MAX # PARALLEL ACTIVITIES , AVG # PARALLEL ACTIVITIES , # DOUBLE LINKS , NPV , MAX MEMORY (ABSOLUTE) , MAX MEMORY (1) , MAX MEMORY (2) , AVG MEMORY , MAX # UDC IN MEMORY , AVG # UDC IN MEMORY , UDC CPU TIME , NPV CPU TIME , NPV (ENU) , CPU TIME (ENU) \n";
+		Results << "N , INSTANCE ,Max Threads, # UDC , # COMBINATIONS , # OUTGOING LINKS , MAX # PARALLEL ACTIVITIES , AVG # PARALLEL ACTIVITIES , # DOUBLE LINKS , NPV , MAX MEMORY (ABSOLUTE) , MAX MEMORY (1) , MAX MEMORY (2) , AVG MEMORY , MAX # UDC IN MEMORY , AVG # UDC IN MEMORY , UDC CPU TIME , NPV CPU TIME , NPV (ENU) , CPU TIME (ENU) \n";
 	}
 
 	lv_max_mem = static_cast<float>(static_cast<double>(gv_mem * 8) / static_cast<double>(ga_bin[20]));
@@ -81,7 +81,7 @@ void f_store(void)
 			printf("[%d][%d]---MEM(MB)[%.2f]---MEM(MB)(EFF)[%.2f]---MEM(MB)(AVG)[%.2f]---MPTG[%u]---APTG[%.2f]\n", ga_batch[0], ga_batch[1], lv_tot_mem, lv_max_mem, gv_avg_mem, gv_max_nr_udc, gv_avg_udc);
 			printf("\n");
 			ofstream Results("Results.csv", ios::app);
-			Results << ga_batch[0] << ", " << ga_batch[1] << ", " << lv_tot_nrp << ", " << lv_tot_nrc << ", " << lv_tot_nro << ", " << gv_mpa << ", " << gv_avg_mpa << ", " << gv_double << ", " << "NA" << ", " << lv_tot_mem << ", " << gv_mem << ", " << lv_max_mem << " , " << gv_avg_mem << ", " << gv_max_nr_udc << ", " << gv_avg_udc << ", " << lv_time_udc << ", " << "NA" << ", " << "NA" << ", " << "NA" << "\n";
+			Results << ga_batch[0] << ", " << ga_batch[1] << ", "<< omp_get_max_threads()<<"," << lv_tot_nrp << ", " << lv_tot_nrc << ", " << lv_tot_nro << ", " << gv_mpa << ", " << gv_avg_mpa << ", " << gv_double << ", " << "NA" << ", " << lv_tot_mem << ", " << gv_mem << ", " << lv_max_mem << " , " << gv_avg_mem << ", " << gv_max_nr_udc << ", " << gv_avg_udc << ", " << lv_time_udc << ", " << "NA" << ", " << "NA" << ", " << "NA" << "\n";
 		}
 		else	// Feasible.
 		{
@@ -90,7 +90,7 @@ void f_store(void)
 			printf("[%d][%d]---NPV[%.2f]---MEM(MB)[%.2f]---MEM(MB)(EFF)[%.2f]---MEM(MB)(AVG)[%.2f]---T_UDC(sec)[%.2f]---T_NPV(sec)[%.2f]---MPTG[%u]---APTG[%.2f]\n", ga_batch[0], ga_batch[1], gv_npv, lv_tot_mem, lv_max_mem, gv_avg_mem, lv_time_udc, lv_time_npv, gv_max_nr_udc, gv_avg_udc);
 			printf("\n");
 			ofstream Results("Results.csv", ios::app);
-			Results << ga_batch[0] << ", " << ga_batch[1] << ", " << lv_tot_nrp << ", " << lv_tot_nrc << ", " << lv_tot_nro << ", " << gv_mpa << ", " << gv_avg_mpa << ", " << gv_double << ", " << gv_npv << ", " << lv_tot_mem << ", " << gv_mem << ", " << lv_max_mem << " , " << gv_avg_mem << ", " << gv_max_nr_udc << ", " << gv_avg_udc << ", " << lv_time_udc << ", " << lv_time_npv << ", " << "NA" << ", " << "NA" << "\n";
+			Results << ga_batch[0] << ", " << ga_batch[1] << ", " << omp_get_max_threads() << ", " << lv_tot_nrp << ", " << lv_tot_nrc << ", " << lv_tot_nro << ", " << gv_mpa << ", " << gv_avg_mpa << ", " << gv_double << ", " << gv_npv << ", " << lv_tot_mem << ", " << gv_mem << ", " << lv_max_mem << " , " << gv_avg_mem << ", " << gv_max_nr_udc << ", " << gv_avg_udc << ", " << lv_time_udc << ", " << lv_time_npv << ", " << "NA" << ", " << "NA" << "\n";
 		}
 	}
 	else	// Full Enumeration.
@@ -108,7 +108,7 @@ void f_store(void)
 			printf("[%d][%d]---ENU[%.2f]---TIME(sec)[%.2f]", ga_batch[0], ga_batch[1], lv_npv, lv_time2);
 			printf("\n");
 			ofstream Results("Results.csv", ios::app);
-			Results << ga_batch[0] << ", " << ga_batch[1] << ", " << lv_tot_nrp << ", " << lv_tot_nrc << ", " << lv_tot_nro << ", " << gv_mpa << ", " << gv_avg_mpa << ", " << gv_double << ", " << "NA" << ", " << lv_tot_mem << ", " << gv_mem << ", " << lv_max_mem << " , " << gv_avg_mem << ", " << gv_max_nr_udc << ", " << gv_avg_udc << ", " << lv_time_udc << ", " << "NA" << ", " << lv_npv << ", " << lv_time2 << "\n";
+			Results << ga_batch[0] << ", " << ga_batch[1] << ", " << omp_get_max_threads() << ", " << lv_tot_nrp << ", " << lv_tot_nrc << ", " << lv_tot_nro << ", " << gv_mpa << ", " << gv_avg_mpa << ", " << gv_double << ", " << "NA" << ", " << lv_tot_mem << ", " << gv_mem << ", " << lv_max_mem << " , " << gv_avg_mem << ", " << gv_max_nr_udc << ", " << gv_avg_udc << ", " << lv_time_udc << ", " << "NA" << ", " << lv_npv << ", " << lv_time2 << "\n";
 		}
 		else	// Feasible.
 		{
@@ -118,7 +118,7 @@ void f_store(void)
 			printf("[%d][%d]---ENU[%.2f]---TIME(sec)[%.2f]", ga_batch[0], ga_batch[1], lv_npv, lv_time2);
 			printf("\n");
 			ofstream Results("Results.csv", ios::app);
-			Results << ga_batch[0] << ", " << ga_batch[1] << ", " << lv_tot_nrp << ", " << lv_tot_nrc << ", " << lv_tot_nro << ", " << gv_mpa << ", " << gv_avg_mpa << ", " << gv_double << ", " << gv_npv << ", " << lv_tot_mem << ", " << gv_mem << ", " << lv_max_mem << " , " << gv_avg_mem << ", " << gv_max_nr_udc << ", " << gv_avg_udc << ", " << lv_time_udc << ", " << lv_time_npv << ", " << lv_npv << ", " << lv_time2 << "\n";
+			Results << ga_batch[0] << ", " << ga_batch[1] << ", " << omp_get_max_threads() << ", " << lv_tot_nrp << ", " << lv_tot_nrc << ", " << lv_tot_nro << ", " << gv_mpa << ", " << gv_avg_mpa << ", " << gv_double << ", " << gv_npv << ", " << lv_tot_mem << ", " << gv_mem << ", " << lv_max_mem << " , " << gv_avg_mem << ", " << gv_max_nr_udc << ", " << gv_avg_udc << ", " << lv_time_udc << ", " << lv_time_npv << ", " << lv_npv << ", " << lv_time2 << "\n";
 		}
 	}
 }
